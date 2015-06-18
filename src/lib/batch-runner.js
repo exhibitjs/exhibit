@@ -1,0 +1,177 @@
+import {join, relative, normalize, resolve as resolvePath} from 'path';
+import {Engine, subdir, isAbsolute} from 'exhibit-core';
+import identity from 'lodash/utility/identity';
+import {readFile} from './promisories';
+import {colours} from 'exhibit-core';
+import {EventEmitter} from 'events';
+import {filter} from 'in-place';
+import Promise from 'bluebird';
+
+const {grey, red} = colours;
+
+const ENGINE = Symbol();
+const DEFERRED = Symbol();
+const RUNNING = Symbol();
+const DEST = Symbol();
+const ORIGIN_DIR = Symbol();
+const CONTROLLER = Symbol();
+const CWD = Symbol();
+
+
+export default class BatchRunner extends EventEmitter {
+  constructor({cwd, originDir, loadPaths, plugins, controller, dest, verbose}) {
+    super();
+
+    console.assert(typeof originDir === 'string', 'should be stirng');
+
+    // make an exhibit engine, which this batchrunner will use for every batch
+    this[ENGINE] = new Engine({
+      base: originDir,
+      plugins,
+      verbose,
+
+      importMissingFile: async (requestedPath) => {
+        console.assert(isAbsolute(requestedPath));
+        requestedPath = normalize(requestedPath);
+
+        const tryPaths = [];
+        if (subdir(originDir, requestedPath)) {
+          // it's an 'internal' path, but core has not been able to get it from its own source.
+          // so remap the requested path to each of the load paths in turn, and stop when we find contents.
+          for (const loadPath of loadPaths) {
+            tryPaths.push(join(loadPath, relative(originDir, requestedPath)));
+          }
+        }
+        else tryPaths.push(requestedPath);
+
+        for (const path of tryPaths) {
+          try {
+            const contents = await readFile(path);
+            return {contents, path};
+          }
+          catch (e) {
+            switch(e.code) {
+              case 'EISDIR':
+              case 'ENOENT':
+                continue;
+            }
+            throw e;
+          }
+        }
+
+        const error = new Error('Exhibit could not locate a file to satisfy import path: ' + requestedPath);
+        error.code = 'EXHIBITNOTFOUND';
+        throw error;
+      },
+    });
+
+    this[CONTROLLER] = controller;
+    this[ORIGIN_DIR] = originDir;
+    this[DEST] = dest;
+    this[CWD] = cwd;
+    this[DEFERRED] = [];
+    this[RUNNING] = false;
+  }
+
+
+  async run({files, autoReport=true, deferrable=true}) {
+    if (!files.every(file => isAbsolute(file.path))) {
+      console.error('files passed to Batch#run():', files);
+      throw new Error('Files passed to Batch#run() must have absolute paths');
+    }
+
+    // if already running, just collect up the files for another batch to run afterwards
+    if (this[RUNNING]) {
+      if (!deferrable) {
+        throw new Error(
+          'Cannot run a non-deferrable batch while a batch is already running.'
+        );
+      }
+
+      files.forEach(file => {
+        // in case two changes to the same file occur in quick succession, keep only the latest one
+        filter(this[DEFERRED], t => t.path !== file.path);
+        this[DEFERRED].push(file);
+      });
+
+      return null;
+    }
+
+    this[RUNNING] = true;
+
+    let reporter;
+    if (autoReport) {
+      reporter = this[CONTROLLER].startReport(
+        files.map(file => relative(this[CWD], file.path)).join(', ')
+      );
+    }
+
+
+    // make and run a batch
+    const changes = await this[ENGINE].batch(files);
+
+    console.assert(
+      changes.every(change => isAbsolute(change.path)),
+      'Expected all changes from Engine#batch() to have absolute paths'
+    );
+
+    // write the changes out to the disk
+    let writtenChanges;
+    if (changes) {
+      writtenChanges = await Promise.map(changes, change => {
+        if (change) {
+          return this[DEST].write(
+            relative(this[ORIGIN_DIR], change.path),
+            change.contents
+          );
+        }
+      });
+    }
+
+    // exclude nulls
+    filter(writtenChanges, identity);
+
+    // convert them to absolute paths
+    // (as these ones came from dest, they have relative paths)
+    for (const change of writtenChanges) {
+      change.path = resolvePath(this[ORIGIN_DIR], change.path);
+    }
+
+    // finish the report
+    if (autoReport) {
+      if (reporter.errorCount) reporter.say();
+
+      if (writtenChanges.length) {
+        for (const change of writtenChanges) {
+          reporter.change(change);
+        }
+
+        // emit an event so the controller can notify browser-sync
+        this.emit('batch-complete', writtenChanges);
+      }
+      else reporter.say(grey('[no changes]'));
+
+      this[CONTROLLER].endReport();
+    }
+
+    // if any more files were deferred during that batch, run another one
+    this[RUNNING] = false;
+    if (this[DEFERRED].length) {
+      const nextTriggers = [].concat(this[DEFERRED]);
+      this[DEFERRED].length = 0;
+      setImmediate(() => {
+        this.run({files: nextTriggers}).catch(error => {
+          console.error(red('Unhandled exception from deferred batch'));
+          console.error(error.stack);
+        });
+      });
+    }
+
+    console.assert(
+      writtenChanges.every(change => isAbsolute(change.path)),
+      'writtenChanges should all have absolute paths here'
+    );
+
+    return writtenChanges;
+  };
+}

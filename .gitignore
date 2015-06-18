@@ -1,0 +1,4 @@
+/node_modules/
+/dist-*/
+/testing/tmp-*/
+/testing/bower_components/
