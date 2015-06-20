@@ -25,14 +25,14 @@ const buildDefaults = {
   browserSync: false,
   open: false,
   bsSnippet: true, // can be only true or false, defaults to true (but has no effect if no browserSync)
-  verbose: true, // temp
+  verbose: false,
 };
 
 const watchDefaults = {
   watch: true,
   serve: true,
   browserSync: true,
-  open: false, // temp
+  open: true,
 };
 
 
@@ -139,4 +139,3 @@ export default function exhibit(origin, ...loadPaths) {
 
 
 exhibit.plugins = pluginsLoader;
-
