@@ -61,7 +61,7 @@
   "scripts": {
     "prepublish": "eslint src && multiform",
     "pretest": "multiform",
-    "test": "node test",
+    "test": "node index.js",
     "watch": "nodemon --exec 'npm test' --watch src --watch test/special.js --watch index.js --watch package.json"
   }
 }

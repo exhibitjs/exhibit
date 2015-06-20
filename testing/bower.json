@@ -1,8 +1,0 @@
-{
-  "name": "fuck",
-  "version": "0.0.0",
-  "dependencies": {
-    "bootstrap-sass": "~3.3.5",
-    "normalize-css": "~3.0.3"
-  }
-}
