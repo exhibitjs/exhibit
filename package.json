@@ -16,6 +16,7 @@
     "cli-color": "^1.0.0",
     "connect": "^3.4.0",
     "decamelize": "^1.0.0",
+    "exhibit-core": "0.0.1",
     "in-place": "^1.1.0",
     "lodash": "^3.9.3",
     "minimatch": "^2.0.8",
