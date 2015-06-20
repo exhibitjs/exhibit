@@ -9,7 +9,6 @@ const DEST_DIR = Symbol();
 const DEST_DIR_RELATIVE = Symbol();
 const CWD = Symbol();
 
-// const indent = ' ' + grey('>') + ' ';
 const indent = '  ';
 
 export default class Reporter {
@@ -44,7 +43,8 @@ export default class Reporter {
   }
 
   countError() {
-    this.errorCount++;
+    this.errorCount++; // eslint-disable-line space-unary-ops
+    // https://github.com/eslint/eslint/issues/2764
   }
 
 

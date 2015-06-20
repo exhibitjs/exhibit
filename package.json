@@ -14,7 +14,7 @@
     "camelcase": "^1.1.0",
     "chalk": "^1.0.0",
     "cli-color": "^1.0.0",
-    "connect": "^3.3.5",
+    "connect": "^3.4.0",
     "decamelize": "^1.0.0",
     "in-place": "^1.1.0",
     "lodash": "^3.9.3",
@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^3.1.17",
-    "clear-trace": "0.0.4",
+    "clear-trace": "0.0.5",
     "eslint": "^0.23.0",
     "glob": "^5.0.10",
     "multiform-build": "^0.1.1",
