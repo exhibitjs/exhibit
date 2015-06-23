@@ -297,7 +297,15 @@ export default class Controller {
         });
       }
 
-      // resolve the initial `.write()` call with the changes
+      // relativise the paths of the final changes before returning
+      if (changes) {
+        for (const change in changes) {
+          console.assert(isAbsolute(change.path));
+          change.path = relative(originDir, change.path);
+        }
+      }
+
+      // resolve the initial `.build()` call with the changes
       return changes || null;
     }
   }
