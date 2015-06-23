@@ -12,7 +12,7 @@ const getSnippet = port => {
   return (
     '\n<!-- browsersync snippet -->' +
     '\n<script>' +
-    `\ndocument.write('<script async src="http://' + location.hostname + ':${port}/browser-sync/browser-sync-client.${bsVersion}.js">\\/script>');` +
+    `\ndocument.write('<script async src="http://' + location.hostname + ':${port}/browser-sync/browser-sync-client.${bsVersion}.js"><\\/script>');` +
     '\n</script>' +
     '\n<!-- end browsersync snippet -->\n'
   );
