@@ -7,7 +7,6 @@ import Destination from './destination';
 import BatchRunner from './batch-runner';
 import clearTrace from 'clear-trace';
 import {mkdirp} from './promisories';
-import decamelize from 'decamelize';
 import Reporter from './reporter';
 import {filter} from 'in-place';
 import Promise from 'bluebird';
