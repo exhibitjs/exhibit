@@ -65,6 +65,10 @@ export default class BatchRunner extends EventEmitter {
       },
     });
 
+    this[ENGINE].on('error', error => {
+      this.emit('error', error);
+    });
+
     this[CONTROLLER] = controller;
     this[ORIGIN_DIR] = originDir;
     this[DEST] = dest;

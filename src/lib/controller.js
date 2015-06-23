@@ -139,29 +139,35 @@ export default class Controller {
     batchRunner.on('error', error => {
       const reporter = this[REPORTER] || new Reporter().start('Out-of-batch error!');
       reporter.countError();
+
       reporter.say(); // leave a blank line
 
       // handle our own plugin errors in a useful way
       if (error.code === 'PLUGIN_ERROR') {
-        const plugin = this[PLUGINS][error.pluginIndex];
+        const plugin = error.plugin;
+        const originalError = error.originalError;
 
         reporter.say(
-          red('error') + grey(' from ') + (plugin.name ? decamelize(plugin.name, '-') : '[anonymous]' + grey(` (plugin ${error.pluginIndex + 1} of ${this[PLUGINS].length})`)) +
-          grey(' building ' + error.actionFilename)
+          grey('error from ') + plugin.name +
+          grey(' building ' + relative(cwd, error.buildPath))
         );
 
         // if we've got an original error from the plugin, print that
-        if (error.originalError) {
-          if (error.originalError.code === 'SOURCE_ERROR') {
-            reporter.say(error.originalError.printout, 1);
+        if (originalError) {
+          if (originalError.code === 'SOURCE_ERROR') {
+            reporter.say(red(originalError.message), 2);
+            if (originalError.path) {
+              reporter.say(grey(relative(cwd, originalError.path) + originalError.pathSuffix), 2);
+            }
+            reporter.say(originalError.excerpt, 2);
           }
           else {
-            reporter.say(clearTrace(error.originalError), 1);
+            reporter.say(clearTrace(error.originalError), 2);
           }
         }
-        // otherwise just print the emitted error's message
+        // otherwise just print the emitted error
         else {
-          reporter.say(error.stack, 1);
+          reporter.say(clearTrace(error), 2);
         }
       }
 
@@ -174,6 +180,8 @@ export default class Controller {
           reporter.say(red('non-error thrown:') + '\n' + error);
         }
       }
+
+      reporter.say();
 
       if (!this[REPORTER]) reporter.end();
     });
@@ -299,7 +307,7 @@ export default class Controller {
 
       // relativise the paths of the final changes before returning
       if (changes) {
-        for (const change in changes) {
+        for (const change of changes) {
           console.assert(isAbsolute(change.path));
           change.path = relative(originDir, change.path);
         }
