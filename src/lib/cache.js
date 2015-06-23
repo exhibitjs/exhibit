@@ -80,6 +80,8 @@ export default class Cache extends VirtualFolder {
   async write(path, contents) {
     console.assert(!isAbsolute(path), 'Do not write absolute paths to Cache instances.');
 
+    this.emit('writing', path);
+
     const change = super.write(path, contents);
 
     if (change) {
@@ -94,8 +96,6 @@ export default class Cache extends VirtualFolder {
         await this.ensureDirExists(dirname(change.path));
         await writeFile(absolutePath, change.contents);
       }
-
-      this.emit('persisted', change);
     }
 
     return change;

@@ -2,8 +2,8 @@
  * A function to load all local plugins registered in the CWD's package.json.
  */
 
-import {join} from 'path';
 import camelCase from 'camelcase';
+import {join} from 'path';
 
 export default function plugins() {
   const pkg = require(join(process.cwd(), 'package.json'));

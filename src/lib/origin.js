@@ -1,10 +1,14 @@
-import assign from 'lodash/object/assign';
-import {readFile} from './promisories';
 import {basename, resolve as resolvePath} from 'path';
+import assign from 'lodash/object/assign';
 import {isAbsolute} from 'exhibit-core';
-import sane from 'sane';
+import {readFile} from './promisories';
 import Promise from 'bluebird';
 import Cache from './cache';
+import sane from 'sane';
+
+const WATCHER = Symbol();
+const DISK_DIR = Symbol();
+const WATCH_CALLED = Symbol();
 
 const saneDefaults = {
   watchman: false,
@@ -12,9 +16,6 @@ const saneDefaults = {
   dot: true,
 };
 
-const WATCHER = Symbol();
-const WATCH_CALLED = Symbol();
-const DISK_DIR = Symbol();
 
 export default class Origin extends Cache {
   constructor(diskDir) {
@@ -55,12 +56,12 @@ export default class Origin extends Cache {
 
           readFile(absPath).then(contents => {
             this.writeWithoutPersisting(path, contents);
-          }).catch(err => {
-            if (err.code === 'ENOENT') this.writeWithoutPersisting(path, null);
+          }).catch(error => {
+            if (error.code === 'ENOENT') this.writeWithoutPersisting(path, null);
             else {
               // we could not read the file because of permissions or some other issue.
               // since we're in limbo here, we can only print the error
-              console.error(`\nFailed to read file after change: ${path}\n${err.stack}\n`);
+              console.error(`\nFailed to read file after change: ${path}\n${error.stack}\n`);
             }
           });
         }

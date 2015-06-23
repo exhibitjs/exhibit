@@ -1,4 +1,5 @@
 import {join, relative, resolve as resolvePath, sep as pathSep} from 'path';
+import exhibitBrowserSyncSnippet from './exhibit-browser-sync-snippet';
 import {colours, isAbsolute} from 'exhibit-core';
 import identity from 'lodash/utility/identity';
 import isNumber from 'lodash/lang/isNumber';
@@ -16,16 +17,16 @@ import opn from 'opn';
 const {red, grey, green} = colours;
 
 const CWD = Symbol();
-const ORIGIN_DIR = Symbol();
-const DEST_DIR = Symbol();
-const ORIGIN = Symbol();
 const DEST = Symbol();
-const LOAD_PATHS = Symbol();
+const ORIGIN = Symbol();
+const OPTIONS = Symbol();
 const PLUGINS = Symbol();
 const REPORTER = Symbol();
+const DEST_DIR = Symbol();
+const ORIGIN_DIR = Symbol();
+const LOAD_PATHS = Symbol();
 const CONNECT_SERVER = Symbol();
 const BROWSERSYNC_API = Symbol();
-const OPTIONS = Symbol();
 
 
 export default class Controller {
@@ -40,6 +41,7 @@ export default class Controller {
     this[ORIGIN] = new Origin(this[ORIGIN_DIR]);
     this[DEST] = new Destination(this[DEST_DIR]);
   }
+
 
 
   async execute() {
@@ -115,7 +117,11 @@ export default class Controller {
       file.path = resolvePath(originDir, file.path);
     }
 
-    console.log('options verbose', options.verbose);
+    // add the browserSyncSnippet plugin if appropriate
+    if (options.browserSync) {
+      const ports = await gotPorts;
+      this[PLUGINS].push(exhibitBrowserSyncSnippet(ports.browserSync));
+    }
 
     // set up the batch runner (allows us to run successive 'batches' of files to build)
     const batchRunner = new BatchRunner({
@@ -165,7 +171,7 @@ export default class Controller {
           reporter.say(red('unknown error:') + '\n' + clearTrace(error));
         }
         else {
-          reporter.say(red('unknown error (not actually an error object):') + '\n' + error);
+          reporter.say(red('non-error thrown:') + '\n' + error);
         }
       }
 
@@ -188,10 +194,10 @@ export default class Controller {
       // capture all destination writes that occur during the first batch
       // (so afterwards we can decide which files, if any, to delete)
       const initialWrites = [];
-      const destWritesListener = change => {
-        initialWrites.push(change.path);
+      const destWritesListener = path => {
+        initialWrites.push(path);
       };
-      this[DEST].on('persisted', destWritesListener);
+      this[DEST].on('writing', destWritesListener);
 
       // run the first batch now, with manual reporting
       const firstReporter = this.startReport(join(originDirRelative, '**', '*'));
@@ -209,10 +215,8 @@ export default class Controller {
       }
 
       // stop listening for writes; do initial deletions
-      this[DEST].removeListener('persisted', destWritesListener);
+      this[DEST].removeListener('writing', destWritesListener);
       const initialDeletions = await this[DEST].purgeAllExcept(initialWrites);
-      if (initialDeletions) filter(initialDeletions, identity);
-
 
       // report events from the first batch
       if (firstReporter.errorCount) firstReporter.say();
@@ -224,6 +228,7 @@ export default class Controller {
         filter(initialDeletions, identity);
 
         initialDeletions.forEach(change => {
+          change.path = resolvePath(originDir, change.path);
           firstReporter.change(change);
         });
       }
@@ -248,7 +253,6 @@ export default class Controller {
         if (options.browserSync) {
           firstReporter.say(
             green('browser-sync ') + grey('running at ' + bsUIURL)
-            + grey(' - snippet: ' + getBSSnippet(ports.browserSync)) // temporary
           );
         }
 
@@ -259,7 +263,7 @@ export default class Controller {
           );
         }
 
-        if (options.open) firstReporter.say('opening browser');
+        if (options.open) firstReporter.say(green('opening browser'));
       }
 
       // ensure everything is up and running, then print the first report
@@ -300,7 +304,6 @@ export default class Controller {
 
 
 
-
   startReport(headline) {
     if (this[REPORTER]) throw new Error('Reporter already exists');
 
@@ -312,6 +315,7 @@ export default class Controller {
 
     return this[REPORTER];
   }
+
 
 
   endReport(symbol) {
@@ -339,17 +343,4 @@ export default class Controller {
       this[BROWSERSYNC_API].exit();
     }
   }
-}
-
-
-
-function getBSSnippet(bsPort) {
-  console.assert(isNumber(bsPort));
-
-  return (
-    '<script id="__bs_script__">' +
-    'document.write("<script async src=\'http://HOST:' + bsPort +
-    '/browser-sync/browser-sync-client.2.6.4.js\'><\\/script>\".replace(\"HOST\", location.hostname));' +
-    '</script>'
-  );
 }

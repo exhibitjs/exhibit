@@ -1,15 +1,16 @@
-import path from 'path';
 import {colours, isAbsolute} from 'exhibit-core';
 import prettyHRTime from 'pretty-hrtime';
+import path from 'path';
 
 const {green, red, grey} = colours;
 
-const ORIGIN_DIR = Symbol();
-const DEST_DIR = Symbol();
-const DEST_DIR_RELATIVE = Symbol();
 const CWD = Symbol();
+const DEST_DIR = Symbol();
+const ORIGIN_DIR = Symbol();
+const DEST_DIR_RELATIVE = Symbol();
 
 const indent = '  ';
+
 
 export default class Reporter {
   constructor({cwd, originDir, destDir}) {
@@ -27,6 +28,7 @@ export default class Reporter {
     return this;
   }
 
+
   say(what = '', indentLevel=0) {
     for (let line of what.split('\n')) console.log(indent + new Array(indentLevel).join('__') + line);
   }
@@ -41,6 +43,7 @@ export default class Reporter {
       grey(' (' + change.sizeDifference + ')')
     );
   }
+
 
   countError() {
     this.errorCount++; // eslint-disable-line space-unary-ops
