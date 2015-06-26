@@ -22,7 +22,7 @@ const getSnippet = port => {
 export default function (port) {
 
   return function exhibitBrowserSyncSnippet(path, contents) {
-    if (extname(path) !== '.html') return true;
+    if (extname(path) !== '.html') return contents;
 
     const result = {};
 
