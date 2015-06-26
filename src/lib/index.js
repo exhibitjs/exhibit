@@ -1,5 +1,5 @@
 /**
- * The public API for Exhibit. For building up a configuration and then calling `.build()` - at which point it initialises a Controller instance to manage the ongoing build process.
+ * The public API for Exhibit. For building up a configuration and then calling `.build()` - at which point it initialises a Controller instance to manage the [ongoing] build process.
  */
 
 import path from 'path';

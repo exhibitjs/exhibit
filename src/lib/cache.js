@@ -1,10 +1,3 @@
-/**
- * This is an abstract base class for Destination and Cache.
- * It also inherits from VirtualFolder, but Destination will override its
- * .write() method with an async version that actually persists the file
- * to disk. This sounds complicated; rethink.
- */
-
 import {basename, resolve as resolvePath, normalize, dirname, relative} from 'path';
 import {lstat, readFile, readdir, writeFile, unlink, mkdirp} from './promisories';
 import {VirtualFolder, isAbsolute} from 'exhibit-core';
@@ -17,7 +10,7 @@ const EXISTING_DIR_PROMISES = Symbol();
 
 /**
  * Traverses and loads all contents of all files under `dir`.
- * (Probably should be made safer, e.g. cap how many files/bytes etc.)
+ * (Probably should be made safer, e.g. cap how many files/bytes etc, probably controlled by options.)
  */
 const recursiveLoadDir = async (dir) => {
   const finalResults = {};

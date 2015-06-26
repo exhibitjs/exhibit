@@ -177,5 +177,5 @@ export default class BatchRunner extends EventEmitter {
     );
 
     return writtenChanges;
-  };
+  }
 }
