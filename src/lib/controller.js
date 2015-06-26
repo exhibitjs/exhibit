@@ -13,7 +13,7 @@ import Promise from 'bluebird';
 import Origin from './origin';
 import opn from 'opn';
 
-const {red, grey, green} = colours;
+const {red, grey, green, yellow} = colours;
 
 const CWD = Symbol();
 const DEST = Symbol();
@@ -146,17 +146,26 @@ export default class Controller {
         const plugin = error.plugin;
         const originalError = error.originalError;
 
+        const isWarning = originalError && !!originalError.warning;
+
         reporter.say(
-          grey('error from ') + plugin.name +
-          grey(' building ' + relative(cwd, error.buildPath))
+          grey((isWarning ? 'warning' : 'error') + ' from ') + plugin.name +
+          grey(' building ' + relative(cwd, error.buildPath) + ':')
         );
 
         // if we've got an original error from the plugin, print that
         if (originalError) {
           if (originalError.code === 'SOURCE_ERROR') {
-            reporter.say(red(originalError.message), 2);
+            const errorColour = isWarning ? yellow : red;
+
+            reporter.say('\n' + errorColour(originalError.message), 2);
             if (originalError.path) {
-              reporter.say(grey(relative(cwd, originalError.path) + originalError.pathSuffix), 2);
+
+              reporter.say(
+                '\n' + errorColour(relative(cwd, originalError.path) +
+                  originalError.pathSuffix),
+                2
+              );
             }
             reporter.say(originalError.excerpt, 2);
           }
