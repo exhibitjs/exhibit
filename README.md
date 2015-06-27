@@ -9,7 +9,7 @@
 
 Exhibit is a little library for 'streaming' the contents of one folder into another, transforming them on the fly.
 
-It's kind of like a Yeoman/Brunch–style workflow, but reconceived as a library, with an Express-like API:
+It's a bit like a Yeoman/Brunch–style workflow, but reconceived as a library, with an Express-like API:
 
 ```js
 exhibit('folder-a')
@@ -22,9 +22,11 @@ The `{watch: true}` option means that after all files are built, Exhibit will co
 
 Exhibit handles inter-file dependencies automatically, in a language-agnostic way. It does this by keeping track of which files *import* which other files, and which files *output* which other files, regardless of their language (made possible by requiring all plugins to do their importing and outputting through a provided API instead of accessing the disk directly). So it knows that when you edit X, it needs to rebuild Y and Z. It almost never rebuilds anything that wouldn't change.
 
+
 ## Demo
 
-The easiest way to learn it (until better docs exist) is to check out the [demo app](#).
+Until better docs exist, here is a [demo app](https://github.com/exhibitjs/demo) that shows how it works.
+
 
 ## Building
 
@@ -63,13 +65,13 @@ exhibit('folder-a', 'bower_components', 'moar_components' /* etc */)
 
 These exist so far:
 
-- [sass](#) – compiles SCSS files
-- [coffee](#) – compiles CoffeeScript files
-- [babel](#) – compiles JS files with Babel
+- [sass](https://github.com/exhibitjs/exhibit-sass) – compiles SCSS files
+- [coffee](https://github.com/exhibitjs/exhibit-coffee) – compiles CoffeeScript files
+- [babel](https://github.com/exhibitjs/exhibit-babel) – compiles JS files with Babel
+- [include-assets](https://github.com/exhibitjs/exhibit-include-assets) – checks your `<script>` or `<link rel="stylesheet">` tags and imports any missing files from your load paths
+- [concat](https://github.com/exhibitjs/exhibit-concat) – concatenate adjacent scripts/stylesheets and update the corresponding HTML tags
 - browserify (coming soon)
-- [include-assets](#) – checks your `<script>` or `<link rel="stylesheet">` tags and imports any missing files from your load paths
-- concat – concatenate adjacent scripts/stylesheets and update the corresponding HTML tags
-- inline – inlines short scripts and stylesheets into your HTML
+- inline (coming soon)
 
 
 ### Loading plugins automatically
