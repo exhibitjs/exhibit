@@ -13,6 +13,7 @@
     "buffer-equal": "0.0.1",
     "camelcase": "^1.1.0",
     "chalk": "^1.0.0",
+    "clear-trace": "0.0.5",
     "cli-color": "^1.0.0",
     "connect": "^3.4.0",
     "exhibit-core": "^0.0.5",
