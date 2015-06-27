@@ -58,7 +58,7 @@ exhibit('folder-a', 'bower_components', 'moar_components' /* etc */)
 ```
 
 - The first argument to `exhibit` is your app's source directory, which is what gets built.
-- Subsequent arguments are extra load paths that will be made available for plugins to import things from.
+- Subsequent arguments are extra load paths that will be made available for plugins to import from.
 
 
 ## Plugins
