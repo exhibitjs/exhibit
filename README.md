@@ -7,42 +7,45 @@
 
 ## Overview
 
-Exhibit streams the contents of one folder into another, transforming them on the fly.
+Exhibit streams the contents of one directory into another, transforming them on the fly.
 
-It's a bit like a Yeoman/Brunch workflow, but reconceived as a library with an Express-like API:
+It's inspired by the typical Yeoman workflow, but reconceived as a library with an Express-like API:
 
 ```js
 exhibit('folder-a')
+  .use(babel())
   .use(sass())
-  .use(coffee())
+  .use(autoprefixer())
   .build('folder-b', {watch: true});
 ```
 
-The `{watch: true}` option tells Exhibit to continue watching the source folder and **incrementally** rebuild files when they change. There are no temp files and it's *fast*.
+The `{watch: true}` option tells Exhibit to continue watching the source directory and **incrementally** rebuild files when they change. There are no temp files and it's *fast*.
 
 
 ## Demo
 
-Until better docs exist, here is a [demo app](https://github.com/exhibitjs/demo) that shows how it works.
+Until better docs exist, here is a [demo repo](https://github.com/exhibitjs/demo) to show how Exhibit can be used to build a simple front-end app.
 
 
 ## Building
 
-The optional second argument to `.build()` is an options object:
+The first argument to `.build()` is the destination path. An empty dir will be created here if necessary.
 
-- `watch` – watch the source directory and rebuild things incrementally when files change. (If you don't enable this, Exhibit will just stop after everything has been built, which may be what you want.)
+The optional second argument is an options object with these properties:
+
+- `watch` – watch the source directory and rebuild things incrementally when files change. (Omit this if you just want to build and then exit.)
 
 - `serve` – serve up the destination directory using Connect.
 
-- `browserSync` – run a BrowserSync server and inject a JS snippet in to your HTML files to wire them up to it (so you get live-reloading pages).
+- `browserSync` – wires your built app up with BrowserSync so you get live-reloading pages when you edit files.
 
 - `open` – open the site in your browser (this option only works in conjunction with `serve`).
 
-- `verbose` – print out a lot of extra info about what's building.
+- `verbose` – print out a **lot** of extra info about what's going in and out of each plugin.
 
-(Shortcut: you can pass `true` instead of an options object, and this will enable the options `watch`, `serve`, `browserSync` and `open` all at once. This is a typical set of options for hacking on a frontend app.)
+(Shortcut: you can pass `true` instead of an options object – this enables the options `watch`, `serve`, `browserSync` and `open`. This is a typical set of options for hacking on a frontend app. You can also pass an object after that to further adjust the options.)
 
-The `.build()` method returns a promise, so you can get notified when it's done using `.build('folder-b').then(function (files) {...});`. (NB. 'done' means all files have been built – note that if `watch` is enabled, Exhibit will continue watching and rebuilding even after this promise resolves, until you exit the process or call `stop()`.)
+The `.build()` method returns a promise, so you can get notified when it's done using `.build('folder-b').then(function (changes) {...});`. (NB. 'done' means all files have been built – note that if `watch` is enabled, Exhibit will continue watching and rebuilding even after this promise resolves, until you exit the process or call `stop()`.)
 
 ## Load paths
 
@@ -61,22 +64,24 @@ exhibit('folder-a', 'bower_components', 'moar_components' /* etc */)
 
 ## Plugins
 
-These exist so far:
+So far:
 
-- [sass](https://github.com/exhibitjs/exhibit-sass) – compiles SCSS files
-- [coffee](https://github.com/exhibitjs/exhibit-coffee) – compiles CoffeeScript files
+- [sass](https://github.com/exhibitjs/exhibit-sass) – compiles SCSS files with node-sass
 - [babel](https://github.com/exhibitjs/exhibit-babel) – compiles JS files with Babel
+- [coffee](https://github.com/exhibitjs/exhibit-coffee) – compiles CoffeeScript files
 - [include-assets](https://github.com/exhibitjs/exhibit-include-assets) – checks your `<script>` or `<link rel="stylesheet">` tags and imports any missing files from your load paths
 - [concat](https://github.com/exhibitjs/exhibit-concat) – concatenate adjacent scripts/stylesheets and update the corresponding HTML tags
+- [uglify](https://github.com/exhibitjs/exhibit-uglify) – minify JavaScript
+- clean-css (coming soon)
 - browserify (coming soon)
 - inline (coming soon)
 
-[Open an issue](https://github.com/callumlocke/exhibit/issues) to request a plugin for something else.
+[Open an issue](https://github.com/callumlocke/exhibit/issues) if you want to request a plugin.
 
 
 ### Loading plugins automatically
 
-If you've installed `exhibit-*` modules in your `package.json`, you can load them all in one go like this:
+If you've installed `exhibit-*` modules in your `package.json`, you can load them all in one go, like this:
 
 ```js
 var exhibit = require('exhibit');
