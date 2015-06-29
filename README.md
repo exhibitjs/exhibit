@@ -9,7 +9,7 @@
 
 Exhibit streams the contents of one directory into another, transforming them on the fly.
 
-It's inspired by the typical Yeoman workflow, but reconceived as a library with an Express-like API:
+It's inspired by Yeoman and Brunch, but reconceived as a library with an Express-like API:
 
 ```js
 exhibit('folder-a')
