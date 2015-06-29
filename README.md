@@ -1,17 +1,17 @@
-# Exhibit.js
+# Exhibit.js (alpha)
 
-> Incremental, whole-app build pipelines (ALPHA)
+> Incremental, whole-app build pipelines. Intended for SPAs and static sites.
 
 [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
 
 
 ## Overview
 
-Exhibit streams the contents of one directory into another, transforming them on the fly.
-
-It's inspired by Yeoman and Brunch, but reconceived as a library with an Express-like API:
+Exhibit streams the contents of one directory into another, transforming them on the fly. It's a regular Node library with an Express-like API:
 
 ```js
+var exhibit = require('exhibit');
+
 exhibit('folder-a')
   .use(babel())
   .use(sass())
@@ -19,33 +19,35 @@ exhibit('folder-a')
   .build('folder-b', {watch: true});
 ```
 
-The `{watch: true}` option tells Exhibit to continue watching the source directory and **incrementally** rebuild files when they change. There are no temp files and it's *fast*.
+The `{watch: true}` option tells Exhibit to continue watching the source directory and incrementally rebuild files when they change. There are no temp files and it's *fast*.
 
 
 ## Demo
 
-Until better docs exist, here is a [demo repo](https://github.com/exhibitjs/demo) to show how Exhibit can be used to build a simple front-end app.
+Until proper docs exist, here is a [demo repo](https://github.com/exhibitjs/demo) to show how Exhibit can be used to build a simple front-end app.
 
 
 ## Building
 
 The first argument to `.build()` is the destination path. An empty dir will be created here if necessary.
 
-The optional second argument is an options object with these properties:
+The optional second argument is an options object with these boolean properties:
 
-- `watch` – watch the source directory and rebuild things incrementally when files change. (Omit this if you just want to build and then exit.)
+- `watch` – watches the source directory and rebuilds files incrementally when they change. (Omit this if you just want to build and then exit.)
 
-- `serve` – serve up the destination directory using Connect.
+- `serve` – serves up the destination directory using Connect.
 
-- `browserSync` – wires your built app up with BrowserSync so you get live-reloading pages when you edit files.
+- `browserSync` – wires everything up with BrowserSync so you get live-reloading pages whenever changes are written.
 
-- `open` – open the site in your browser (this option only works in conjunction with `serve`).
+- `open` – opens the site in your browser (this option only works in conjunction with `serve`).
 
-- `verbose` – print out a **lot** of extra info about what's going in and out of each plugin.
+- `verbose` – prints out a **lot** of extra info about what's going in and out of each plugin.
 
-(Shortcut: you can pass `true` instead of an options object – this enables the options `watch`, `serve`, `browserSync` and `open`. This is a typical set of options for hacking on a frontend app. You can also pass an object after that to further adjust the options.)
+(Shortcut: you can pass `true` instead of an options object – this enables the four options `watch`, `serve`, `browserSync` and `open` all at once. This is a typical configuration for hacking on a frontend app.)
 
-The `.build()` method returns a promise, so you can get notified when it's done using `.build('folder-b').then(function (changes) {...});`. (NB. 'done' means all files have been built – note that if `watch` is enabled, Exhibit will continue watching and rebuilding even after this promise resolves, until you exit the process or call `stop()`.)
+### Callbacks?
+
+The `.build()` method returns a promise, so if you want to be notified when it's done: `.build('folder-b').then(function (changes) {...});`. (NB. 'done' means all files have been built – note that if `watch` is enabled, Exhibit will continue watching and rebuilding even after this promise resolves, until you exit the process or call `stop()`.)
 
 ## Load paths
 
@@ -59,7 +61,7 @@ exhibit('folder-a', 'bower_components', 'moar_components' /* etc */)
 ```
 
 - The first argument to `exhibit` is your app's source directory, which is what gets built.
-- Subsequent arguments are extra load paths that will be made available for plugins to import from.
+- Any subsequent arguments are taken as extra load paths that will be made available for plugins to import from.
 
 
 ## Plugins
@@ -112,15 +114,15 @@ exhibit('folder-a')
 
 #### More advanced plugins
 
-> 🐝 All this will be explained better in real authoring/publishing docs, soon.
+> 🐝 All this will be explained better in proper authoring/publishing docs, soon.
 
 - Async stuff: just return a promise that resolves with the 'real' return value.
 
-- If you encounter an error in whatever you're building, just throw or reject.
+- If you encounter an error in whatever you're building, just throw or reject. Exhibit will catch and present the error.
 
 - Importing other files: use `this.import(path)`. This returns a promise that resolves with an object containing `path` (the resolved file path – might be different from what you requested) and `contents` (a buffer). Using `this.import()` instead of `fs` to import files has a few benefits:
   1. It allows Exhibit to keep track of inter-file dependencies so it can automate incremental rebuilds and deletions correctly.
-  2. It allows you to import files that may have already been modified by a 
+  2. It allows you to import files that may have already been modified by a previous plugin.
   3. It will automatically defer to the load paths if it's not found.
 
 - Outputting multiple/other paths: instead of returning the contents directly, return an object with file paths as keys and buffers/strings as contents.
