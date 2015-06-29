@@ -112,7 +112,7 @@ exhibit('folder-a')
 
 #### More advanced plugins
 
-> All this will be explained better in real authoring/publishing docs, soon.
+> 🐝 All this will be explained better in real authoring/publishing docs, soon.
 
 - Async stuff: just return a promise that resolves with the 'real' return value.
 
