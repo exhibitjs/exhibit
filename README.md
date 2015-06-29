@@ -1,15 +1,15 @@
 # Exhibit.js
 
-> Incremental build tool (VERY ALPHA)
+> Incremental, whole-app build pipelines (ALPHA)
 
 [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
 
 
 ## Overview
 
-Exhibit is a little library for 'streaming' the contents of one folder into another, transforming them on the fly.
+Exhibit streams the contents of one folder into another, transforming them on the fly.
 
-It's a bit like a Yeoman/Brunch–style workflow, but reconceived as a library, with an Express-like API:
+It's a bit like a Yeoman/Brunch workflow, but reconceived as a library with an Express-like API:
 
 ```js
 exhibit('folder-a')
@@ -18,9 +18,7 @@ exhibit('folder-a')
   .build('folder-b', {watch: true});
 ```
 
-The `{watch: true}` option means that after all files are built, Exhibit will continue to watch the source folder and **incrementally** rebuild files when they change. There are no temp files and it's *fast*.
-
-Exhibit handles inter-file dependencies automatically, in a language-agnostic way. It does this by keeping track of which files *import* which other files, and which files *output* which other files, regardless of their language (made possible by requiring all plugins to do their importing and outputting through a provided API instead of accessing the disk directly). So it knows that when you edit X, it needs to rebuild Y and Z. It almost never rebuilds anything that wouldn't change.
+The `{watch: true}` option tells Exhibit to continue watching the source folder and **incrementally** rebuild files when they change. There are no temp files and it's *fast*.
 
 
 ## Demo
@@ -30,7 +28,7 @@ Until better docs exist, here is a [demo app](https://github.com/exhibitjs/demo)
 
 ## Building
 
-The second argument to `.build()` is an optional options object:
+The optional second argument to `.build()` is an options object:
 
 - `watch` – watch the source directory and rebuild things incrementally when files change. (If you don't enable this, Exhibit will just stop after everything has been built, which may be what you want.)
 
@@ -73,6 +71,8 @@ These exist so far:
 - browserify (coming soon)
 - inline (coming soon)
 
+[Open an issue](https://github.com/callumlocke/exhibit/issues) to request a plugin for something else.
+
 
 ### Loading plugins automatically
 
@@ -107,7 +107,7 @@ exhibit('folder-a')
 
 #### More advanced plugins
 
-> All this will be explained better in real docs with publishing guidelines, soon.
+> All this will be explained better in real authoring/publishing docs, soon.
 
 - Async stuff: just return a promise that resolves with the 'real' return value.
 
