@@ -19,4 +19,5 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Update outdated unreleased diff link.
  -->
 
-[unreleased]: https://github.com/exhibitjs/exhibit/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/exhibitjs/exhibit/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/exhibitjs/exhibit/compare/v0.1.0...v0.3.0
