@@ -1,13 +1,19 @@
 # Exhibit.js (alpha)
 
-> Incremental, whole-app build pipelines. Intended for SPAs and static sites.
+> Incremental, whole-app build pipelines. Intended mainly for static sites and SPAs.
 
 [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
+
+```sh
+$ npm install exhibit
+```
 
 
 ## Overview
 
-Exhibit streams the contents of one directory into another, transforming them on the fly. It's a regular Node library with an Express-like API:
+Exhibit sets up an incremental flow of files from one directory to another, via composable transformation plugins.
+
+It's not an overbearing CLI tool. It's just a regular Node library with a very simple API:
 
 ```js
 var exhibit = require('exhibit');
@@ -19,7 +25,7 @@ exhibit('folder-a')
   .build('folder-b', {watch: true});
 ```
 
-The `{watch: true}` option tells Exhibit to continue watching the source directory and incrementally rebuild files when they change. There are no temp files and it's *fast*.
+It handles inter-file dependencies automatically. It does the minimal work on each rebuild. It involves no temp files, and it's *fast*.
 
 
 ## Demo
@@ -68,6 +74,7 @@ exhibit('folder-a', 'bower_components', 'moar_components' /* etc */)
 
 So far:
 
+- [browserify](https://github.com/exhibitjs/exhibit-browserify) - bundles scripts with [Browserify](http://browserify.org/)
 - [sass](https://github.com/exhibitjs/exhibit-sass) – compiles SCSS files with node-sass
 - [babel](https://github.com/exhibitjs/exhibit-babel) – compiles JS files with Babel
 - [coffee](https://github.com/exhibitjs/exhibit-coffee) – compiles CoffeeScript files
@@ -75,10 +82,9 @@ So far:
 - [concat](https://github.com/exhibitjs/exhibit-concat) – concatenate adjacent scripts/stylesheets and update the corresponding HTML tags
 - [uglify](https://github.com/exhibitjs/exhibit-uglify) – minify JavaScript
 - clean-css (coming soon)
-- browserify (coming soon)
 - inline (coming soon)
 
-[Open an issue](https://github.com/callumlocke/exhibit/issues) if you want to request a plugin.
+[Open an issue](https://github.com/exhibitjs/exhibit/issues) if you want to request a plugin.
 
 
 ### Loading plugins automatically

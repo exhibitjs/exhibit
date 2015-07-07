@@ -5,7 +5,7 @@
 import camelCase from 'camelcase';
 import {join} from 'path';
 
-export default function plugins() {
+export default function autoLoadPlugins() {
   const pkg = require(join(process.cwd(), 'package.json'));
 
   const moduleNames = [];
