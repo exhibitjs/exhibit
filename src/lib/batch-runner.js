@@ -1,7 +1,6 @@
-import {join, relative, normalize, resolve as resolvePath} from 'path';
-import {Engine, subdir, isAbsolute} from 'exhibit-core';
+import {join, relative, resolve as resolvePath} from 'path';
+import {Engine, isAbsolute} from 'exhibit-core';
 import identity from 'lodash/utility/identity';
-import {readFile} from './promisories';
 import {colours} from 'exhibit-core';
 import {EventEmitter} from 'events';
 import {filter} from 'in-place';
@@ -19,7 +18,7 @@ const CWD = Symbol();
 
 
 export default class BatchRunner extends EventEmitter {
-  constructor({cwd, originDir, loadPaths, plugins, controller, dest, verbose}) {
+  constructor({cwd, originDir, importers, builders, controller, dest, verbose}) {
     super();
 
     console.assert(typeof originDir === 'string', 'should be stirng');
@@ -27,42 +26,9 @@ export default class BatchRunner extends EventEmitter {
     // make an exhibit engine, which this batchrunner will use for every batch
     this[ENGINE] = new Engine({
       base: originDir,
-      plugins,
+      builders,
       verbose,
-
-      importMissingFile: async (requestedPath) => {
-        console.assert(isAbsolute(requestedPath));
-        requestedPath = normalize(requestedPath);
-
-        const tryPaths = [];
-        if (subdir(originDir, requestedPath)) {
-          // it's an 'internal' path, but core has not been able to get it from its own source.
-          // so remap the requested path to each of the load paths in turn, and stop when we find contents.
-          for (const loadPath of loadPaths) {
-            tryPaths.push(join(loadPath, relative(originDir, requestedPath)));
-          }
-        }
-        else tryPaths.push(requestedPath);
-
-        for (const path of tryPaths) {
-          try {
-            const contents = await readFile(path);
-            return {contents, path};
-          }
-          catch (e) {
-            switch(e.code) {
-              case 'EISDIR':
-              case 'ENOENT':
-                continue;
-            }
-            throw e;
-          }
-        }
-
-        const error = new Error('Exhibit could not locate a file to satisfy import path: ' + requestedPath);
-        error.code = 'EXHIBITNOTFOUND';
-        throw error;
-      },
+      importers,
     });
 
     this[ENGINE].on('error', error => {

@@ -1,12 +1,15 @@
 import {join, relative, resolve as resolvePath, sep as pathSep} from 'path';
-import exhibitBrowserSyncSnippet from './exhibit-browser-sync-snippet';
+import browserSyncSnippet from './bundled-plugins/browser-sync-snippet';
+import genericImporter from './bundled-plugins/generic-importer';
+import {param, ArrayOf, Optional} from 'decorate-this';
+import bowerImporter from './bundled-plugins/bower';
 import {colours, isAbsolute} from 'exhibit-core';
+import {mkdirp, stat} from './promisories';
 import identity from 'lodash/utility/identity';
 import isNumber from 'lodash/lang/isNumber';
-import Destination from './destination';
 import BatchRunner from './batch-runner';
+import Destination from './destination';
 import clearTrace from 'clear-trace';
-import {mkdirp} from './promisories';
 import Reporter from './reporter';
 import {filter} from 'in-place';
 import Promise from 'bluebird';
@@ -18,36 +21,54 @@ const {red, grey, green, yellow} = colours;
 const CWD = Symbol();
 const DEST = Symbol();
 const ORIGIN = Symbol();
-const OPTIONS = Symbol();
-const PLUGINS = Symbol();
+const BUILDERS = Symbol();
 const REPORTER = Symbol();
 const DEST_DIR = Symbol();
+const IMPORTERS = Symbol();
 const ORIGIN_DIR = Symbol();
-const LOAD_PATHS = Symbol();
+const BUILD_OPTIONS = Symbol();
 const CONNECT_SERVER = Symbol();
 const BROWSERSYNC_API = Symbol();
 
 
 export default class Controller {
-  constructor({cwd, originDir, destDir, loadPaths, plugins, options}) {
+  constructor(options) {
+    this.init(options);
+  }
+
+  @param({
+    cwd: String,
+    originDir: String,
+    destDir: String,
+    importers: ArrayOf(Function),
+    builders: ArrayOf(Function),
+    buildOptions: {
+      serve: Optional(Boolean), // todo: accept custom options too (port?)
+      browserSync: Optional(Boolean), // same here (general BS options)
+      watch: Optional(Boolean),
+      open: Optional(Boolean),
+      verbose: Optional(Boolean),
+      autoImporters: Optional(Boolean),
+    },
+  }, 'Options')
+  init({cwd, originDir, destDir, importers, builders, buildOptions}) {
     this[CWD] = cwd;
     this[ORIGIN_DIR] = resolvePath(cwd, originDir);
     this[DEST_DIR] = resolvePath(cwd, destDir);
-    this[LOAD_PATHS] = loadPaths.map(loadPath => resolvePath(cwd, loadPath));
-    this[PLUGINS] = plugins;
-    this[OPTIONS] = options;
+    this[IMPORTERS] = importers;
+    this[BUILDERS] = builders;
+    this[BUILD_OPTIONS] = buildOptions;
     this[REPORTER] = null;
     this[ORIGIN] = new Origin(this[ORIGIN_DIR]);
     this[DEST] = new Destination(this[DEST_DIR]);
   }
 
 
-
   async execute() {
     const cwd = this[CWD];
     const originDir = this[ORIGIN_DIR];
     const destDir = this[DEST_DIR];
-    const options = this[OPTIONS];
+    const buildOptions = this[BUILD_OPTIONS];
     const originDirRelative = relative(cwd, originDir);
     const destDirRelative = relative(cwd, destDir);
 
@@ -56,13 +77,13 @@ export default class Controller {
 
     // start watching the source directory if configured to do so
     // (but no need to wait for it at this point; just get it going)
-    const originReady = options.watch ? this[ORIGIN].watch() : Promise.resolve();
+    const originReady = buildOptions.watch ? this[ORIGIN].watch() : Promise.resolve();
 
     // find appropriate ports
-    const gotPorts = (options.browserSync || options.serve) ? (() => {
+    const gotPorts = (buildOptions.browserSync || buildOptions.serve) ? (() => {
       const names = [];
-      if (options.serve) names.push('server');
-      if (options.browserSync) names.push('browserSync', 'bsUI', 'weinre');
+      if (buildOptions.serve) names.push('server');
+      if (buildOptions.browserSync) names.push('browserSync', 'bsUI', 'weinre');
 
       return Promise.resolve(
         require('portscanner-plus').getPorts(names.length, 8000, 9000, names)
@@ -70,7 +91,7 @@ export default class Controller {
     })() : Promise.resolve();
 
     // get a browser-sync server going (if enabled)
-    const browserSyncReady = options.browserSync ? gotPorts.then(ports => {
+    const browserSyncReady = buildOptions.browserSync ? gotPorts.then(ports => {
       console.assert(isNumber(ports.browserSync));
 
       const bs = require('browser-sync').create();
@@ -93,7 +114,7 @@ export default class Controller {
     }) : Promise.resolve();
 
     // and get a connect server going for the destDir (if enabled)
-    const serverReady = options.serve ? new Promise((resolve, reject) => {
+    const serverReady = buildOptions.serve ? new Promise((resolve, reject) => {
       gotPorts.then(ports => {
         console.assert(isNumber(ports.server));
 
@@ -109,6 +130,31 @@ export default class Controller {
       });
     }) : Promise.resolve();
 
+    // add a generic importer to handle absolute external paths before anything else does
+    // (this is necessary for when eg. a sass bower component file imports another file from its own component - we want to handle this quickly without invoking other weirder importers like bower)
+    this[IMPORTERS].push(genericImporter());
+
+    // add any auto importers
+    const importersReady = buildOptions.autoImporters ? Promise.props({
+      bower: (async () => {
+        let s;
+        try { s = await stat(join(cwd, 'bower.json')); }
+        catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+        }
+
+        // TODO: also check for .bowerrc here in case it changes
+        // the bower_components dir.
+
+        if (s && s.isFile()) {
+          this[IMPORTERS].push(bowerImporter(join(cwd, 'bower_components')));
+          return true;
+        }
+
+        return false;
+      })(),
+      // later can add other ones here...
+    }) : Promise.resolve();
 
     // prime the source and destination folders (read all their contents from disk)
     const [initialInFiles] = await Promise.join(this[ORIGIN].prime(), this[DEST].prime());
@@ -116,21 +162,22 @@ export default class Controller {
       file.path = resolvePath(originDir, file.path);
     }
 
-    // add the browserSyncSnippet plugin if appropriate
-    if (options.browserSync) {
+    // add the browserSyncSnippet builder if appropriate
+    if (buildOptions.browserSync) {
       const ports = await gotPorts;
-      this[PLUGINS].push(exhibitBrowserSyncSnippet(ports.browserSync));
+      this[BUILDERS].push(browserSyncSnippet(ports.browserSync));
     }
 
     // set up the batch runner (allows us to run successive 'batches' of files to build)
+    await importersReady;
     const batchRunner = new BatchRunner({
       cwd,
       originDir,
       controller: this,
       dest: this[DEST],
-      loadPaths: this[LOAD_PATHS],
-      plugins: this[PLUGINS],
-      verbose: options.verbose,
+      importers: this[IMPORTERS],
+      builders: this[BUILDERS],
+      verbose: buildOptions.verbose,
     });
 
 
@@ -141,19 +188,19 @@ export default class Controller {
 
       reporter.say(); // leave a blank line
 
-      // handle our own plugin errors in a useful way
-      if (error.code === 'PLUGIN_ERROR') {
-        const plugin = error.plugin;
+      // handle our own builder errors in a useful way
+      if (error.code === 'BUILDER_ERROR') {
+        const builder = error.builder;
         const originalError = error.originalError;
 
         const isWarning = originalError && !!originalError.warning;
 
         reporter.say(
-          grey((isWarning ? 'warning' : 'error') + ' from ') + plugin.name +
-          grey(' building ' + relative(cwd, error.buildPath) + ':')
+          grey((isWarning ? 'warning' : 'error') + ' from ') + builder.name +
+          grey(' while building ') + relative(cwd, error.buildPath) + grey(':')
         );
 
-        // if we've got an original error from the plugin, print that
+        // if we've got an original error from the builder, print that
         if (originalError) {
           if (originalError.code === 'SOURCE_ERROR') {
             const errorColour = isWarning ? yellow : red;
@@ -196,7 +243,7 @@ export default class Controller {
 
 
     // trigger a browser-sync reload whenever a batch completes
-    if (options.browserSync) {
+    if (buildOptions.browserSync) {
       batchRunner.on('batch-complete', writtenChanges => {
         browserSyncReady.then(bs => {
           bs.reload(writtenChanges.map(change => change.path));
@@ -255,31 +302,31 @@ export default class Controller {
 
       // complete the report, inc. special first-batch extras
       const ports = await gotPorts;
-      const serverURL = options.serve ? `http://localhost:${ports.server}/` : null;
-      const bsUIURL = options.browserSync ? `http://localhost:${ports.bsUI}/` : null;
-      if (options.serve || options.browserSync || options.watch) {
+      const serverURL = buildOptions.serve ? `http://localhost:${ports.server}/` : null;
+      const bsUIURL = buildOptions.browserSync ? `http://localhost:${ports.bsUI}/` : null;
+      if (buildOptions.serve || buildOptions.browserSync || buildOptions.watch) {
         firstReporter.say();
 
-        if (options.serve) {
+        if (buildOptions.serve) {
           firstReporter.say(
             green('serving ') + grey(destDirRelative + ' at ' + serverURL)
           );
         }
 
-        if (options.browserSync) {
+        if (buildOptions.browserSync) {
           firstReporter.say(
             green('browser-sync ') + grey('running at ' + bsUIURL)
           );
         }
 
-        if (options.watch) {
+        if (buildOptions.watch) {
           firstReporter.say(
             green('watching ') +
             grey(originDirRelative + pathSep + '**')
           );
         }
 
-        if (options.open) firstReporter.say(green('opening browser'));
+        if (buildOptions.open) firstReporter.say(green('opening browser'));
       }
 
       // ensure everything is up and running, then print the first report
@@ -287,11 +334,11 @@ export default class Controller {
       this.endReport();
 
       // open the server if appropriate
-      if (options.open) opn(serverURL);
+      if (buildOptions.open) opn(serverURL);
 
       // set up watching: whenever a file changes in the origin,
       // run & report another batch
-      if (options.watch) {
+      if (buildOptions.watch) {
         const bufferedChanges = [];
         let bufferTimeout;
 
@@ -350,20 +397,20 @@ export default class Controller {
 
 
   /**
-   * Closes everything that's keeping the process open.
+   * Closes anything that's keeping the process open.
    */
   stop() {
-    const options = this[OPTIONS];
+    const buildOptions = this[BUILD_OPTIONS];
 
-    if (options.watch) {
+    if (buildOptions.watch) {
       this[ORIGIN].stop();
     }
 
-    if (options.serve) {
+    if (buildOptions.serve) {
       this[CONNECT_SERVER].close();
     }
 
-    if (options.browserSync) {
+    if (buildOptions.browserSync) {
       this[BROWSERSYNC_API].exit();
     }
   }

@@ -3,8 +3,8 @@ import {lstat, readFile, readdir, writeFile, unlink, mkdirp} from './promisories
 import {VirtualFolder, isAbsolute} from 'exhibit-core';
 import Promise from 'bluebird';
 
-const DISK_DIR = Symbol();
 const PRIMED = Symbol();
+const DISK_DIR = Symbol();
 const EXISTING_DIR_PROMISES = Symbol();
 
 

@@ -9,12 +9,13 @@ import isFunction from 'lodash/lang/isFunction';
 import assign from 'lodash/object/assign';
 import {map, concat} from 'in-place';
 import Controller from './controller';
-import pluginsLoader from './plugins-loader';
+import autoLoadPlugins from './auto-load-plugins';
+import genericImporter from './bundled-plugins/generic-importer';
 
 const ORIGIN = Symbol();
-const LOAD_PATHS = Symbol();
+const IMPORTERS = Symbol();
 const CONTROLLER = Symbol();
-const PLUGINS = Symbol();
+const BUILDERS = Symbol();
 
 const cwd = process.cwd();
 
@@ -26,6 +27,7 @@ const buildDefaults = {
   open: false,
   bsSnippet: true, // can be only true or false, defaults to true (but has no effect if no browserSync)
   verbose: false,
+  autoImporters: true,
 };
 
 const watchDefaults = {
@@ -41,19 +43,21 @@ const watchDefaults = {
  */
 
 class Exhibit {
-  constructor({origin, loadPaths}) {
+  constructor({origin, importers}) {
     this[ORIGIN] = origin;
-    this[LOAD_PATHS] = loadPaths;
-    this[PLUGINS] = [];
+
+
+    this[IMPORTERS] = importers;
+    this[BUILDERS] = [];
   }
 
 
   /**
    * Adds a step to the build sequence.
    */
-  use(plugin) {
-    if (!isFunction(plugin)) throw new TypeError('Expected .use() argument to be a function.');
-    this[PLUGINS].push(plugin);
+  use(builder) {
+    if (!isFunction(builder)) throw new TypeError('Expected .use() argument to be a function.');
+    this[BUILDERS].push(builder);
     return this;
   }
 
@@ -79,12 +83,12 @@ class Exhibit {
     options = assign({}, buildDefaults, useWatchDefaults ? watchDefaults : null, options);
     if (!options.serve) options.open = false;
 
-    // walk up the chain to find the first exhibit instance, and concat all plugins found along the way
+    // walk up the chain to find the first exhibit instance, and concat all builders found along the way
     let firstExhibit = this;
-    const plugins = this[PLUGINS].slice();
+    const builders = this[BUILDERS].slice();
     while (firstExhibit[ORIGIN] instanceof Exhibit) {
       firstExhibit = firstExhibit[ORIGIN];
-      concat(plugins, firstExhibit[PLUGINS]);
+      concat(builders, firstExhibit[BUILDERS]);
     }
 
     console.assert(isString(firstExhibit[ORIGIN]), 'origin of first exhibit should be a string');
@@ -93,10 +97,10 @@ class Exhibit {
     this[CONTROLLER] = new Controller({
       originDir: firstExhibit[ORIGIN],
       destDir: destDir,
-      loadPaths: this[LOAD_PATHS],
-      plugins,
+      importers: this[IMPORTERS],
+      buildOptions: options,
+      builders,
       cwd,
-      options,
     });
 
     // run it
@@ -118,16 +122,20 @@ class Exhibit {
 /**
  * We export a single function that returns Exhibit instances.
  */
-export default function exhibit(origin, ...loadPaths) {
+export default function exhibit(origin, ...importers) {
   if (isString(origin)) {
-    // resolve the load paths
-    map(loadPaths, loadPath => path.resolve(cwd, loadPath));
+    // resolve the importers array
+    map(importers, importer => {
+      if (isString(importer)) return genericImporter(importer);
+      if (isFunction(importer)) return (path.resolve(cwd, importer));
+      throw new TypeError(`Expected importer to be string or function; got ${typeof importer}`);
+    });
 
-    return new Exhibit({origin, loadPaths});
+    return new Exhibit({origin, importers});
   }
   else if (origin instanceof Exhibit) {
-    if (loadPaths.length) {
-      throw new TypeError('Load paths can only be set on an Exhibit instance that reads directly from disk.');
+    if (importers) {
+      throw new TypeError('Importers can only be set on an Exhibit instance that reads directly from disk.');
     }
 
     // Make a new Exhibit with this one as its source
@@ -138,4 +146,4 @@ export default function exhibit(origin, ...loadPaths) {
 }
 
 
-exhibit.plugins = pluginsLoader;
+exhibit.plugins = autoLoadPlugins;

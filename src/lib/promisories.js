@@ -12,5 +12,6 @@ export default {
   unlink: promisify(fs.unlink),
   readdir: promisify(fs.readdir),
   lstat: promisify(fs.lstat),
+  stat: promisify(fs.stat),
   mkdirp: promisify(mkdirp),
 };

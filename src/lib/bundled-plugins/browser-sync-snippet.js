@@ -1,9 +1,3 @@
-/**
- * This is an Exhibit plugin. It is the only one bundled with Exhibit. It gets
- * automatically added as a final plugin if you enable the `browserSync` build
- * option.
- */
-
 import {extname} from 'path';
 
 const bsVersion = require('browser-sync/package.json').version;
