@@ -13,7 +13,7 @@
     "buffer-equal": "0.0.1",
     "camelcase": "^1.1.0",
     "chalk": "^1.1.0",
-    "clear-trace": "0.0.5",
+    "clear-trace": "0.0.7",
     "cli-color": "^1.0.0",
     "connect": "^3.4.0",
     "exhibit-core": "^0.1.1",
@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "babel-eslint": "^3.1.23",
-    "clear-trace": "0.0.5",
     "eslint": "^0.24.0",
     "glob": "^5.0.13",
     "multiform-build": "^0.2.0",
