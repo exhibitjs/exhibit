@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - New type of plugin: importers.
 - Bower components now resolved automatically with bundled exhibit-bower importer.
+- This changelog.
 
 
 <!-- EXAMPLE:
