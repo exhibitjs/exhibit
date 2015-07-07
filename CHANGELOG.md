@@ -4,7 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased][unreleased]
 ### Added
-- New 'loaders' system to replace `loadPaths`. String load paths can still be provided, but these automatically get turned into `genericLoader` functions. Plus loaders for Bower, JSPM and Component are automatically added if corresponding files (`bower.json` etc.) are detected in the CWD. Also, loaders are a new type of plugin. The other, original plugin type is 'builders'.
+- New type of plugin: importers.
+- Bower components now resolved automatically with bundled exhibit-bower importer.
 
 
 <!-- EXAMPLE:
