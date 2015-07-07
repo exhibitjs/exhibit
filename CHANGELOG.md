@@ -17,4 +17,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Update outdated unreleased diff link.
  -->
 
-[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/exhibitjs/exhibit/compare/v0.1.0...HEAD
