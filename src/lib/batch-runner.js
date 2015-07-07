@@ -1,4 +1,4 @@
-import {join, relative, resolve as resolvePath} from 'path';
+import {relative, resolve as resolvePath} from 'path';
 import {Engine, isAbsolute} from 'exhibit-core';
 import identity from 'lodash/utility/identity';
 import {colours} from 'exhibit-core';

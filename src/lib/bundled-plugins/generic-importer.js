@@ -5,8 +5,8 @@ import {resolve} from 'path';
 
 export default function (baseDir) {
 
-  function exhibitGenericLoader(path, type) {
-    const {_, Promise, Set} = this;
+  function exhibitGenericLoader(path) {
+    const {Set} = this;
 
     const accessed = new Set();
     const result = {accessed};

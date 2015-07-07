@@ -6,16 +6,15 @@ import {subdir} from 'exhibit-core';
 export default function (bowerComponentsPath = join(process.cwd(), 'bower_components')) {
 
   function exhibitBower(importPath, types) {
-    const {_, Promise, Set} = this;
-
-    const accessed = new Set();
-
+    const {Set} = this;
 
     const fullPath = resolve(bowerComponentsPath, importPath);
 
     // if it's not actually in the bower components dir (e.g. because we got an
     // absolute path to somewhere else) then return quickly
-    if (!subdir(bowerComponentsPath, fullPath)) return;
+    if (!subdir(bowerComponentsPath, fullPath)) return null;
+
+    const accessed = new Set();
 
     // try just reading it as if it's a direct path to a file within a component
     accessed.add(fullPath);
@@ -54,11 +53,11 @@ export default function (bowerComponentsPath = join(process.cwd(), 'bower_compon
                 // console.log('BOWER NOPE', main, types, extname(main).substring(1), 'UM');
               }
             }
-          }).catch(error => {
-            if (error.code !== 'ENOENT') throw error;
-            // rare case, it was probably pointing at a subfolder of a bower
+          }).catch(e => {
+            if (e.code !== 'ENOENT') throw e;
+            // rare case - it was probably pointing at a subfolder of a bower
             // component (invalid) or at one without a bower.json (ie. bad
-            // component); return nothing.
+            // component). return nothing.
           });
         }
         else if (error.code !== 'ENOENT') throw error;
