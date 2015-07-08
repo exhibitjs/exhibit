@@ -5,7 +5,7 @@ import {resolve} from 'path';
 
 export default function (baseDir) {
 
-  function exhibitGenericLoader(path) {
+  function exhibitGenericImporter(path) {
     const {Set} = this;
 
     const accessed = new Set();
@@ -32,8 +32,8 @@ export default function (baseDir) {
 
 
   if (baseDir) {
-    Object.defineProperty(exhibitGenericLoader, 'dir', {value: baseDir});
+    Object.defineProperty(exhibitGenericImporter, 'dir', {value: baseDir});
   }
 
-  return exhibitGenericLoader;
+  return exhibitGenericImporter;
 }
