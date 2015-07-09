@@ -7,8 +7,8 @@
     "url": "https://github.com/callumlocke/exhibit/issues"
   },
   "dependencies": {
-    "babel-runtime": "^5.6.15",
-    "bluebird": "^2.9.32",
+    "babel-runtime": "^5.6.17",
+    "bluebird": "^2.9.33",
     "browser-sync": "^2.7.13",
     "buffer-equal": "0.0.1",
     "camelcase": "^1.1.0",
@@ -17,7 +17,7 @@
     "cli-color": "^1.0.0",
     "connect": "^3.4.0",
     "decorate-this": "^0.5.0",
-    "exhibit-core": "^0.2.0",
+    "exhibit-core": "^0.2.2",
     "in-place": "^1.1.0",
     "lodash": "^3.10.0",
     "minimatch": "^2.0.8",
