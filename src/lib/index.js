@@ -7,7 +7,7 @@ import isString from 'lodash/lang/isString';
 import isBoolean from 'lodash/lang/isBoolean';
 import isFunction from 'lodash/lang/isFunction';
 import assign from 'lodash/object/assign';
-import {map, concat} from 'in-place';
+import {map} from 'in-place';
 import Controller from './controller';
 import autoLoadPlugins from './auto-load-plugins';
 import genericImporter from './bundled-plugins/generic-importer';
@@ -43,10 +43,8 @@ const watchDefaults = {
  */
 
 class Exhibit {
-  constructor({origin, importers}) {
+  constructor({origin, importers = []}) {
     this[ORIGIN] = origin;
-
-
     this[IMPORTERS] = importers;
     this[BUILDERS] = [];
   }
@@ -83,12 +81,15 @@ class Exhibit {
     options = assign({}, buildDefaults, useWatchDefaults ? watchDefaults : null, options);
     if (!options.serve) options.open = false;
 
-    // walk up the chain to find the first exhibit instance, and concat all builders found along the way
+    // walk up the chain to find the first exhibit instance, and collect all builders found along the way
     let firstExhibit = this;
     const builders = this[BUILDERS].slice();
     while (firstExhibit[ORIGIN] instanceof Exhibit) {
       firstExhibit = firstExhibit[ORIGIN];
-      concat(builders, firstExhibit[BUILDERS]);
+
+      for (let i = firstExhibit[BUILDERS].length - 1; i >= 0; i--) {
+        builders.unshift(firstExhibit[BUILDERS][i]);
+      }
     }
 
     console.assert(isString(firstExhibit[ORIGIN]), 'origin of first exhibit should be a string');
@@ -124,17 +125,18 @@ class Exhibit {
  */
 export default function exhibit(origin, ...importers) {
   if (isString(origin)) {
-    // resolve the importers array
+    // resolve the importers to real functions
     map(importers, importer => {
-      if (isString(importer)) return genericImporter(importer);
-      if (isFunction(importer)) return (path.resolve(cwd, importer));
+      if (isString(importer)) return genericImporter(path.resolve(cwd, importer));
+      // if (isFunction(importer)) return path.resolve(cwd, importer);
+      if (isFunction(importer)) return importer;
       throw new TypeError(`Expected importer to be string or function; got ${typeof importer}`);
     });
 
     return new Exhibit({origin, importers});
   }
   else if (origin instanceof Exhibit) {
-    if (importers) {
+    if (importers.length) {
       throw new TypeError('Importers can only be set on an Exhibit instance that reads directly from disk.');
     }
 
