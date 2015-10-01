@@ -3,7 +3,6 @@ import {readFile} from 'sander';
 
 
 export default function (baseDir) {
-
   function exhibitGenericImporter(path) {
     const {Set} = this;
 

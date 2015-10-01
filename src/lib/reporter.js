@@ -29,7 +29,7 @@ export default class Reporter {
   }
 
 
-  say(what = '', indentLevel=0) {
+  say(what = '', indentLevel = 0) {
     for (let line of what.split('\n')) {
       console.log(indent + new Array(indentLevel).join(indent) + line);
     }
@@ -54,7 +54,7 @@ export default class Reporter {
 
 
   end() {
-    const symbol = /*this.errorCount ? '✗' : */'✓';
+    const symbol = '✓'; // used to be: this.errorCount ? '✗' : '✓'
 
     console.log(
       indent + (this.errorCount ?

@@ -43,7 +43,9 @@ export default class BatchRunner extends EventEmitter {
   }
 
 
-  async run({files, autoReport=true, deferrable=true}) {
+  async run({files, autoReport = true, deferrable = true}) {
+    let reporter, writtenChanges;
+
     if (!files.every(file => isAbsolute(file.path))) {
       console.error('files passed to Batch#run():', files);
       throw new Error('Files passed to Batch#run() must have absolute paths');
@@ -68,7 +70,6 @@ export default class BatchRunner extends EventEmitter {
 
     this[RUNNING] = true;
 
-    let reporter;
     if (autoReport) {
       reporter = this[CONTROLLER].startReport(
         files.map(file => relative(this[CWD], file.path)).join(', ')
@@ -85,7 +86,6 @@ export default class BatchRunner extends EventEmitter {
     );
 
     // write the changes out to the disk
-    let writtenChanges;
     if (changes) {
       writtenChanges = await Promise.map(changes, change => {
         if (change) {

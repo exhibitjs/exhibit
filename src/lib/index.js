@@ -97,7 +97,7 @@ class Exhibit {
     // create the controller
     this[CONTROLLER] = new Controller({
       originDir: firstExhibit[ORIGIN],
-      destDir: destDir,
+      destDir,
       importers: this[IMPORTERS],
       buildOptions: options,
       builders,
@@ -117,7 +117,6 @@ class Exhibit {
     throw new Error('Cannot call .stop() on Exhibit that has not started.');
   }
 }
-
 
 
 /**

@@ -11,9 +11,9 @@ const EXISTING_DIR_PROMISES = Symbol();
 
 /**
  * Traverses and loads all contents of all files under `dir`.
- * (Probably should be made safer, e.g. cap how many files/bytes etc, probably controlled by options.)
+ * TODO: make safer, eg. cap how many files/bytes etc, probably controlled by options.
  */
-const recursiveLoadDir = async (dir) => {
+const recursiveLoadDir = async dir => {
   const finalResults = {};
 
   await Promise.map(readdir(dir), async path => {
@@ -105,7 +105,6 @@ export default class Cache extends VirtualFolder {
 
     return super.write(path, contents);
   }
-
 
 
   ensureDirExists(dir) {

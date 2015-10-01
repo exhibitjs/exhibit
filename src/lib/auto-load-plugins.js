@@ -6,7 +6,7 @@ import camelCase from 'camelcase';
 import {join} from 'path';
 
 export default function autoLoadPlugins() {
-  const pkg = require(join(process.cwd(), 'package.json'));
+  const pkg = require(join(process.cwd(), 'package.json')); // eslint-disable-line global-require
 
   const moduleNames = [];
   if (pkg.devDependencies) moduleNames.push.apply(moduleNames, Object.keys(pkg.devDependencies));
@@ -29,7 +29,7 @@ export default function autoLoadPlugins() {
     Object.defineProperty(lazyLoader, functionName, {
       get: () => {
         if (!loadedPlugins[functionName]) {
-          loadedPlugins[functionName] = require(moduleLookup[functionName]);
+          loadedPlugins[functionName] = require(moduleLookup[functionName]); // eslint-disable-line global-require
         }
         return loadedPlugins[functionName];
       },

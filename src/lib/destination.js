@@ -7,7 +7,7 @@ import Cache from './cache';
 
 
 export default class Destination extends Cache {
-  constructor (diskDir) {
+  constructor(diskDir) {
     super(diskDir);
   }
 
@@ -15,7 +15,7 @@ export default class Destination extends Cache {
   /**
    * Overrides prime just so we can also make a note of which dirs already exist.
    */
-  @promises( ArrayOf( Change ) )
+  @promises(ArrayOf(Change))
 
   async prime() {
     return super.prime().then(initialChanges => {
@@ -31,8 +31,8 @@ export default class Destination extends Cache {
   /**
    * Deletes (from disk) all files except those specified.
    */
-  @param( Optional( ArrayOf( String ) ) )
-  @promises( ArrayOf( Change ) )
+  @param(Optional(ArrayOf(String)))
+  @promises(ArrayOf(Change))
 
   purgeAllExcept(exceptPaths) {
     console.assert(exceptPaths.every(path => !isAbsolute(path)));

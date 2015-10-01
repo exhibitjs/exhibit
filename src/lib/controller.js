@@ -87,7 +87,7 @@ export default class Controller {
       if (buildOptions.browserSync) names.push('browserSync', 'bsUI', 'weinre');
 
       return Promise.resolve(
-        require('portscanner-plus').getPorts(names.length, 8000, 9000, names)
+        require('portscanner-plus').getPorts(names.length, 8000, 9000, names) // eslint-disable-line global-require
       ).timeout(3000, 'Timed out scanning for free ports');
     })() : Promise.resolve();
 
@@ -95,7 +95,7 @@ export default class Controller {
     const browserSyncReady = buildOptions.browserSync ? gotPorts.then(ports => {
       console.assert(isNumber(ports.browserSync));
 
-      const bs = require('browser-sync').create();
+      const bs = require('browser-sync').create(); // eslint-disable-line global-require
       this[BROWSERSYNC_API] = bs;
 
       const bsOptions = {
@@ -117,6 +117,7 @@ export default class Controller {
     // and get a connect server going for the destDir (if enabled)
     const serverReady = buildOptions.serve ? new Promise((resolve, reject) => {
       gotPorts.then(ports => {
+        /* eslint-disable global-require */
         console.assert(isNumber(ports.server));
 
         const app = require('connect')();
@@ -128,6 +129,7 @@ export default class Controller {
 
           resolve(app);
         });
+        /* eslint-enable global-require */
       });
     }) : Promise.resolve();
 
@@ -139,7 +141,9 @@ export default class Controller {
     const importersReady = buildOptions.autoImporters ? Promise.props({
       bower: (async () => {
         let s;
-        try { s = await stat(join(cwd, 'bower.json')); }
+        try {
+          s = await stat(join(cwd, 'bower.json'));
+        }
         catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }
@@ -194,7 +198,7 @@ export default class Controller {
         const builder = error.builder;
         const originalError = error.originalError;
 
-        const isWarning = originalError && !!originalError.warning;
+        const isWarning = originalError && Boolean(originalError.warning);
 
         reporter.say(
           grey((isWarning ? 'warning' : 'error') + ' from ') + builder.name +
@@ -208,7 +212,6 @@ export default class Controller {
 
             reporter.say('\n' + errorColour(originalError.message), 2);
             if (originalError.path) {
-
               reporter.say(
                 '\n' + errorColour(relative(cwd, originalError.path) +
                   originalError.pathSuffix),
@@ -228,13 +231,11 @@ export default class Controller {
       }
 
       // handle any other errors generically
+      else if (error instanceof Error) {
+        reporter.say(red('unknown error:') + '\n' + clearTrace(error));
+      }
       else {
-        if (error instanceof Error) {
-          reporter.say(red('unknown error:') + '\n' + clearTrace(error));
-        }
-        else {
-          reporter.say(red('non-error thrown:') + '\n' + error);
-        }
+        reporter.say(red('non-error thrown:') + '\n' + error);
       }
 
       reporter.say();
@@ -375,7 +376,6 @@ export default class Controller {
   }
 
 
-
   startReport(headline) {
     if (this[REPORTER]) throw new Error('Reporter already exists');
 
@@ -389,12 +389,10 @@ export default class Controller {
   }
 
 
-
   endReport(symbol) {
     this[REPORTER].end(symbol);
     delete this[REPORTER];
   }
-
 
 
   /**

@@ -4,7 +4,6 @@ import {subdir} from 'exhibit-core';
 
 
 export default function (bowerComponentsPath = join(process.cwd(), 'bower_components')) {
-
   function exhibitBower(importPath, types) {
     const {Set} = this;
 
@@ -29,7 +28,9 @@ export default function (bowerComponentsPath = join(process.cwd(), 'bower_compon
           const bowerJSONPath = join(fullPath, 'bower.json');
           accessed.add(bowerJSONPath);
           return readFile(bowerJSONPath, 'utf8').then(bowerJSON => {
-            try { bowerJSON = JSON.parse(bowerJSON); }
+            try {
+              bowerJSON = JSON.parse(bowerJSON);
+            }
             catch (e) {
               e.message += ` in ${bowerJSONPath}`;
               throw e;
