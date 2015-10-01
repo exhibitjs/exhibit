@@ -66,7 +66,7 @@
     "buildwatch": "babel src --out-dir dist --watch",
     "clean": "rimraf dist",
     "prepublish": "npm run build && npm test",
-    "test": "eslint . cd dist && mocha",
+    "test": "eslint . && cd dist && mocha test",
     "testwatch": "cd dist && mocha --watch"
   }
 }
