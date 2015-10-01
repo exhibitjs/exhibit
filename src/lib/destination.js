@@ -1,9 +1,9 @@
-import {Change, decorateThis, isAbsolute} from 'exhibit-core';
+import {param, promises, Optional, ArrayOf} from 'decorate-this';
+import {Change} from 'exhibit-core';
+import {isAbsolute} from 'path';
 import {filter} from 'in-place';
 import Promise from 'bluebird';
 import Cache from './cache';
-
-const {param, promises, Optional, ArrayOf} = decorateThis;
 
 
 export default class Destination extends Cache {

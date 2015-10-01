@@ -1,5 +1,5 @@
 import {join, extname, resolve} from 'path';
-import {readFile} from '../promisories'; // todo: pass in via context?
+import {readFile} from 'sander';
 import {subdir} from 'exhibit-core';
 
 

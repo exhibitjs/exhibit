@@ -1,6 +1,5 @@
-import {isAbsolute} from 'exhibit-core';
-import {readFile} from '../promisories';
-import {resolve} from 'path';
+import {resolve as resolvePath, isAbsolute} from 'path';
+import {readFile} from 'sander';
 
 
 export default function (baseDir) {
@@ -14,7 +13,7 @@ export default function (baseDir) {
     if (!baseDir) {
       if (!isAbsolute(path)) return result; // can't handle non-absolute paths without a base dir set
     }
-    else path = resolve(baseDir, path);
+    else path = resolvePath(baseDir, path);
 
     console.assert(isAbsolute(path), 'should be absolute now');
 

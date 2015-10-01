@@ -1,5 +1,5 @@
-import {colours, isAbsolute} from 'exhibit-core';
 import prettyHRTime from 'pretty-hrtime';
+import {colours} from 'exhibit-core';
 import path from 'path';
 
 const {green, red, grey} = colours;
@@ -37,7 +37,7 @@ export default class Reporter {
 
 
   change(change) {
-    console.assert(isAbsolute(change.path), 'Reporter#change() expects absolute paths; got: ' + change.path);
+    console.assert(path.isAbsolute(change.path), 'Reporter#change() expects absolute paths; got: ' + change.path);
 
     this.say(
       green(change.type) + ' ' +

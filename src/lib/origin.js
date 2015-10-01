@@ -1,7 +1,6 @@
-import {basename, resolve as resolvePath} from 'path';
+import {basename, resolve as resolvePath, isAbsolute} from 'path';
 import assign from 'lodash/object/assign';
-import {isAbsolute} from 'exhibit-core';
-import {readFile} from './promisories';
+import {readFile} from 'sander';
 import Promise from 'bluebird';
 import Cache from './cache';
 import sane from 'sane';

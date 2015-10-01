@@ -1,6 +1,7 @@
-import {basename, resolve as resolvePath, normalize, dirname, relative} from 'path';
-import {lstat, readFile, readdir, writeFile, unlink, mkdirp} from './promisories';
-import {VirtualFolder, isAbsolute} from 'exhibit-core';
+import {basename, resolve as resolvePath, normalize, dirname, relative, isAbsolute} from 'path';
+import {lstat, readFile, readdir, writeFile, unlink} from 'sander';
+import {VirtualFolder} from 'exhibit-core';
+import mkdirp from 'mkdirp-then';
 import Promise from 'bluebird';
 
 const PRIMED = Symbol();

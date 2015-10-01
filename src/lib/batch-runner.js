@@ -1,7 +1,6 @@
-import {relative, resolve as resolvePath} from 'path';
-import {Engine, isAbsolute} from 'exhibit-core';
+import {relative, resolve as resolvePath, isAbsolute} from 'path';
 import identity from 'lodash/utility/identity';
-import {colours} from 'exhibit-core';
+import {Engine, colours} from 'exhibit-core';
 import {EventEmitter} from 'events';
 import {filter} from 'in-place';
 import Promise from 'bluebird';

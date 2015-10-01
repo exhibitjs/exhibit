@@ -1,19 +1,20 @@
-import {join, relative, resolve as resolvePath, sep as pathSep} from 'path';
+import {join, relative, resolve as resolvePath, sep as pathSep, isAbsolute} from 'path';
 import browserSyncSnippet from './bundled-plugins/browser-sync-snippet';
 import genericImporter from './bundled-plugins/generic-importer';
 import {param, ArrayOf, Optional} from 'decorate-this';
 import bowerImporter from './bundled-plugins/bower';
-import {colours, isAbsolute} from 'exhibit-core';
 import identity from 'lodash/utility/identity';
 import isNumber from 'lodash/lang/isNumber';
-import {mkdirp, stat} from './promisories';
 import BatchRunner from './batch-runner';
 import Destination from './destination';
 import clearTrace from 'clear-trace';
+import {colours} from 'exhibit-core';
+import {mkdirp} from 'mkdirp-then';
 import Reporter from './reporter';
 import {filter} from 'in-place';
 import Promise from 'bluebird';
 import Origin from './origin';
+import {stat} from 'sander';
 import opn from 'opn';
 
 const {red, grey, green, yellow} = colours;

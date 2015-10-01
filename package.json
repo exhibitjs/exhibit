@@ -7,43 +7,48 @@
     "url": "https://github.com/exhibitjs/exhibit/issues"
   },
   "dependencies": {
-    "bluebird": "^2.9.33",
-    "browser-sync": "^2.7.13",
+    "bluebird": "^2.10.2",
+    "browser-sync": "^2.9.8",
     "buffer-equal": "0.0.1",
-    "camelcase": "^1.1.0",
-    "chalk": "^1.1.0",
+    "camelcase": "^1.2.1",
+    "chalk": "^1.1.1",
     "clear-trace": "0.0.7",
     "cli-color": "^1.0.0",
     "connect": "^3.4.0",
     "decorate-this": "^0.5.0",
     "exhibit-core": "^0.2.2",
     "in-place": "^1.1.0",
-    "lodash": "^3.10.0",
-    "minimatch": "^2.0.8",
-    "mkdirp": "^0.5.1",
+    "lodash": "^3.10.1",
+    "minimatch": "^3.0.0",
+    "mkdirp-then": "^1.1.0",
     "opn": "^3.0.2",
     "portscanner-plus": "^0.2.1",
     "pretty-bytes": "^2.0.1",
-    "pretty-hrtime": "^1.0.0",
-    "sane": "^1.1.3",
+    "pretty-hrtime": "^1.0.1",
+    "sander": "^0.3.8",
+    "sane": "^1.3.0",
     "serve-static": "^1.10.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",
-    "babel-eslint": "^3.1.23",
+    "babel-eslint": "^4.1.3",
     "chai": "^3.3.0",
-    "eslint": "^0.24.0",
-    "glob": "^5.0.13",
+    "eslint": "^1.5.1",
+    "exhibit-conventions": "^1.0.0",
+    "glob": "^5.0.15",
     "mocha": "^2.3.3",
-    "nodemon": "^1.3.7",
+    "nodemon": "^1.7.1",
     "rimraf": "^2.4.3",
     "source-map-support": "^0.3.2",
     "wrench": "^1.5.8"
   },
+  "engines": {
+    "node": ">= 4",
+    "npm": ">= 3"
+  },
   "files": [
     "src",
-    "dist/lib",
-    "index.js"
+    "dist/lib"
   ],
   "homepage": "https://github.com/exhibitjs/exhibit",
   "keywords": [
