@@ -1,12 +1,10 @@
 import {join, extname, resolve} from 'path';
 import {readFile} from 'sander';
-import {subdir} from 'exhibit-core';
+import subdir from 'subdir';
 
 
 export default function (bowerComponentsPath = join(process.cwd(), 'bower_components')) {
   function exhibitBower(importPath, types) {
-    const {Set} = this;
-
     const fullPath = resolve(bowerComponentsPath, importPath);
 
     // if it's not actually in the bower components dir (e.g. because we got an

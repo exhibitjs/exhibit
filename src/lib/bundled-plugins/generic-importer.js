@@ -4,8 +4,6 @@ import {readFile} from 'sander';
 
 export default function (baseDir) {
   function exhibitGenericImporter(path) {
-    const {Set} = this;
-
     const accessed = new Set();
     const result = {accessed};
 
