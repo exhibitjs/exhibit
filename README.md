@@ -1,65 +1,112 @@
-# Exhibit.js (alpha)
+<div align="center">
+  <h1>Exhibit.js (alpha)</h1>
+  <img src="./docs/illustration.png">
+  <br><br>
+  <p><b>Real-time incremental build.</b></p>
+  <br><br>
+  <p><a href="https://npmjs.org/package/exhibit"><img alt="NPM version" src="https://img.shields.io/npm/v/exhibit.svg?style=flat-square"></a> &nbsp;<a href="http://travis-ci.org/exhibitjs/exhibit"><img alt="Build Status" src="https://img.shields.io/travis/exhibitjs/exhibit.svg?style=flat-square"></a> &nbsp;<a href="https://david-dm.org/exhibitjs/exhibit"><img alt="Dependency Status" src="https://img.shields.io/david/exhibitjs/exhibit.svg?style=flat-square"></a></p>
+  <p><i>(Requires Node 4)</i></p>
+</div>
 
-> #### Realtime build tool
+---
 
-[![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
+Jump to:&nbsp; [Getting started](#getting-started) &nbsp;|&nbsp; [Using with gulp](#using-with-gulp) &nbsp;|&nbsp; [Builders](#builders)
 
-*Requires Node 4*
+---
+
+## What is Exhibit?
+
+Exhibit is a library that helps you set up an **incremental flow of files** from one directory to another, via an arbitrary series of build steps.
+
+It has a middleware-style API:
+
+```js
+exhibit('./src')
+  .use(babel())
+  .use(sass())
+  .use(autoprefixer())
+  .use(concat())
+  .use(rev())
+  .build('./dist', {watch: true});
+```
+
+The above snippet reads all files in `./src`, pushes the whole app through five ‘builders’, and outputs the result to `./dist`.
+
+Then, because of `{watch: true}`, it watches `./src` for incremental changes – and does the minimum work possible for each rebuild.
+
+
+## Features
+
+- designed for the smoothest watch-and-rebuild experience
+- rebuilds are 100% incremental, therefore insanely fast
+- everything is a plugin
+- clean, clear logging of what's being built
+- no temp files
+
+It's ideal for building static sites, single-page apps, browser extensions, and other front-end projects. And you can wire it up to BrowserSync with one line.
+
+
+## The fastest rebuilds ever
+
+A heavily parallelized front end build system can start to look like [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js). The linked example works well, but it's hard to follow, and it's still inefficient when it comes to rebuilds.
+
+Exhibit keeps things simple with a series approach. And a *lot* of in-memory caching.
+
+---
+
+![Exhibit flowchart](./docs/flowchart.png)
+
+---
+
+Every cache contains the entire application 'as it stands'. This, combined with a smart batching system that remembers dependencies per-step across multiple builds, means Exhibit knows exactly what needs to be rebuilt after each change.
+
+That makes it faster where it really matters: **rebuilding after small changes**.
+
+For the first time, it's possible to make a soup-to-nuts chain of build steps comprising preprocessors, bundlers, script/stylesheet concatenation, minification, image optimisation, and revving – and make it respond automatically to incremental changes with minimal effort at each step.
+
+**An example:** let's say you've got your Exhibit chain running with `{watch: true}`, and you edit `_foo.scss` (somewhere within your `src` directory). Exhibit reacts by rebuilding this file. But when it comes to the Sass builder, Exhibit *remembers* that this builder imported that file last time it was building `main.scss` (but not when it was building `other.scss`). So it takes `main.scss` (from the in-memory cache before Sass) and tells Sass to rebuild it again.
+
+
+## Getting started
+
+Check out the examples [in this repo](./examples).
+
+<!-- - [Web Starter Kit](https://github.com/exhibitjs/web-starter-kit) – a fork of Google's excellent front end boilerplate project, modified to use Exhibit. -->
+
+<!-- - Yeoman generator: [exhibit-webapp](https://github.com/exhibitjs/generator-exhibit-webapp) – a fork of Yeoman's gulp-webapp project, modified to use Exhibit. -->
+
+(Yeoman generator and Web Starter Kit fork coming soon.)
+
+
+## Installation
 
 ```sh
 $ npm install exhibit
 ```
 
-Exhibit helps you set up a continuous flow of files from one directory to another – via a series of 'builders'.
-
-A working example:
-
-```js
-exhibit('src')
-  .use(babel())
-  .use(sass())
-  .use(autoprefixer())
-  .use(rev())
-  .build('dist', {watch: true});
-```
-
-- designed for the smoothest watch-and-rebuild experience
-- rebuilds are **100% incremental**, therefore insanely fast
-- friendly, middleware-style API
-- clean, clear logging of what's being built
-- straightforward plugin system
-- no temp files
-- great for building static sites and single-page webapps
-
-The above example reads all files within './src', puts them through three builders in turn, then outputs the results to `./dist`. (Then it continues watching `./src` and rebuilding individual files incrementally, thanks to `{watch: true}`.)
-
-Check out the [examples](./examples).
+Requires [Node 4](https://nodejs.org/en/).
 
 
-## The fastest rebuilds ever
+## Documentation
 
-Instead of parallelizing everything into [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js), Exhibit keeps things simple with a series approach:
+Simply `require('exhibit')` and use it in any Node script.
 
----
+The core API is tiny:
 
-![Exhibit flowchart](https://raw.githubusercontent.com/exhibitjs/exhibit/lazy-load-builders/docs/flowchart.png)
+- [`exhibit('src')`](./docs/api/exhibit.md) returns an Exhibit chain that will read from the './src' directory.
 
----
+- [`.use(builder)`](./docs/api/use.md) adds a builder to the chain.
 
-Every cache contains the whole app (as it stands at that point in the sequence). This, combined with a smart batching system that remembers dependencies across multiple builds, means Exhibit knows exactly what needs to be rebuilt after each change.
+- [`.build('dist')`](./docs/api/build.md) initiates building to the `./dist`' directory and returns a promise.
 
-This means it can be faster where it really matters: **incrementally rebuilding** after small changes.
-
-**An example:** let's say you've got your Exhibit chain running, and you edit <code>_foo.scss</code> (somewhere within your `src` directory). Exhibit *remembers* that the Sass plugin imported that file last time it was building <code>main.scss</code>, but not when it was building <code>other.scss</code>. So Exhibit responds to your edit by pushing only <code>main.scss</code> through that plugin.
+See the [full docs](./docs) for more details.
 
 
 ## Builders
 
-These are usually come from builder plugins, which are just NPM modules named `exhibit-builder-*`.
+### Loading builders from plugins
 
-Or you can write your own builder inline – [see `.use()`` docs](#).
-
-### Existing builder plugins
+Builder plugins are simply NPM modules named `exhibit-builder-*` and include:
 
 - Babel
 - Browserify
@@ -67,31 +114,21 @@ Or you can write your own builder inline – [see `.use()`` docs](#).
 - Autoprefixer
 - Uglify
 
-More coming soon: Webpack, Jade, Less, Stylus. ([Open an issue](#) to request another.)
+More coming soon: Webpack, Jade, Less, Stylus. ([Open an issue](https://github.com/exhibitjs/exhibit/issues) to request another.)
 
-**ProTip:** pass a string and Exhibit will auto-require your builders, e.g. `.use('babel')`. [More info](./docs/api/use.md).
+**ProTip:** you can auto-require builders by passing a string, e.g. `.use('babel')`. [More info](./docs/api/use.md).
 
 
-## Usage
+### Write builders inline
 
-Simply `require('exhibit')` and use it in any Node script.
-
-The API is small:
-
-- [`exhibit('src')`](#) returns an instance that will read from the './src' directory.
-
-- [`.use(builder)`](#) adds a builder to the chain.
-
-- [`.build('dist')`](#) starts building to the 'dist' directory (and returns a promise).
-
-See the [full docs](./docs) for more details.
+A builder is just a function: `.use(function () {...})`. [See `.use()` docs](./docs/api/use.md) for more details.
 
 
 ## Using with gulp
 
 Exhibit is not related to gulp.
 
-But they work nicely together, because `.build()` returns a promise, which gulp likes:
+But they work great together because `.build()` returns a promise, and gulp likes promises:
 
 ```js
 gulp.task('build', function () {
@@ -103,17 +140,10 @@ gulp.task('build', function () {
 ```
 
 
+## Contributing
+
+Contributions are **very** welcome. This project is at an early stage so feel free to [open an issue](https://github.com/exhibitjs/exhibit/issues) if you have any questions/feedback/ideas.
+
 ## Licence
 
 MIT
-
-
-<!-- badge URLs -->
-[npm-url]: https://npmjs.org/package/exhibit
-[npm-image]: https://img.shields.io/npm/v/exhibit.svg?style=flat-square
-
-[travis-url]: http://travis-ci.org/exhibitjs/exhibit
-[travis-image]: https://img.shields.io/travis/exhibitjs/exhibit.svg?style=flat-square
-
-[depstat-url]: https://david-dm.org/exhibitjs/exhibit
-[depstat-image]: https://img.shields.io/david/exhibitjs/exhibit.svg?style=flat-square
