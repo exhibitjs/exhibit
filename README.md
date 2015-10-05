@@ -41,8 +41,8 @@ Then, because of `{watch: true}`, it watches `./src` for incremental changes, on
 - designed for the smoothest watch-and-rebuild experience
 - rebuilds are 100% incremental, therefore insanely fast
 - everything is a plugin
-- modern, promise-driven API
-- clean, clear logging of what's being built
+- promise-driven API
+- concise logging of what's being built
 - no temp files
 
 It's ideal for building static sites, single-page apps, browser extensions, and other front-end projects. And you can wire it up to BrowserSync with one line.
