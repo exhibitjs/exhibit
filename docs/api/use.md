@@ -8,7 +8,7 @@ It can be called in two ways.
 
 **Signature: `.use(fn: builder)`**
 
-Here's a custom builder function that prepends a copyright banner to all CSS files:
+Here's a custom builder function that adds a comment to all CSS files:
 
 ```js
 var exhibit = require('exhibit');
