@@ -8,11 +8,13 @@
   <p><i>(Requires Node 4)</i></p>
 </div>
 
+
 ---
 
 Jump to:&nbsp; [Getting started](#getting-started) &nbsp;|&nbsp; [Using with gulp](#using-with-gulp) &nbsp;|&nbsp; [Builders](#builders)
 
 ---
+
 
 ## What is Exhibit?
 
@@ -52,11 +54,7 @@ A heavily parallelized front end build system can start to look like [task spagh
 
 Exhibit keeps things simple with a series approach. And a *lot* of in-memory caching.
 
----
-
 ![Exhibit flowchart](./docs/flowchart.png)
-
----
 
 Every cache contains the entire application 'as it stands'. This, combined with a smart batching system that remembers dependencies per-step across multiple builds, means Exhibit knows exactly what needs to be rebuilt after each change.
 
