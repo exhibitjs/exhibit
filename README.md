@@ -83,9 +83,11 @@ $ npm install exhibit
 Requires [Node 4](https://nodejs.org/en/).
 
 
-## Documentation
+## API
 
-Simply `require('exhibit')` and use it in any Node script.
+```js
+var exhibit = require('exhibit');
+```
 
 The core API is tiny:
 
@@ -110,11 +112,11 @@ Builder plugins are simply NPM modules named `exhibit-builder-*` and include:
 - [Autoprefixer](https://github.com/exhibitjs/exhibit-builder-autoprefixer)
 - [Uglify](https://github.com/exhibitjs/exhibit-builder-uglify)
 
-More coming soon: Webpack, Jade, Less, Stylus. ([Open an issue](https://github.com/exhibitjs/exhibit/issues) to request another.)
+More on the way: Webpack, Jade, Less, Stylus. ([Open an issue](https://github.com/exhibitjs/exhibit/issues) to request another.)
 
 #### Auto-loading builders
 
-You can skip a lot of `require` calls by [auto-loading builder plugins](docs/api/use.md#auto-loading-plugins).
+You can skip a lot of `require` calls by [auto-loading builder plugins](docs/api/use.md#auto-loading-plugins):
 
 ```js
   .use('sass')
@@ -125,7 +127,7 @@ You can skip a lot of `require` calls by [auto-loading builder plugins](docs/api
 
 ### Write builders inline
 
-A builder is [just a function](docs/api/use.md#passing-a-function).
+A builder is [just a function](docs/api/use.md#passing-a-function):
 
 ```js
   .use(function (path, contents) {...})
