@@ -1,152 +1,159 @@
-# Exhibit.js (alpha)
+<div align="center">
+  <h1>Exhibit.js (alpha)</h1>
+  <img src="./docs/illustration.png">
+  <br><br>
+  <p><b>Real-time incremental build.</b></p>
+  <br><br>
+  <p><a href="https://npmjs.org/package/exhibit"><img alt="NPM version" src="https://img.shields.io/npm/v/exhibit.svg?style=flat-square"></a> &nbsp;<a href="http://travis-ci.org/exhibitjs/exhibit"><img alt="Build Status" src="https://img.shields.io/travis/exhibitjs/exhibit.svg?style=flat-square"></a> &nbsp;<a href="https://david-dm.org/exhibitjs/exhibit"><img alt="Dependency Status" src="https://img.shields.io/david/exhibitjs/exhibit.svg?style=flat-square"></a></p>
+  <p><i>(Requires Node 4)</i></p>
+</div>
 
-> Incremental, whole-app build pipelines. Intended mainly for static sites and SPAs.
 
-[![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][depstat-image]][depstat-url]
+---
+
+Jump to:&nbsp; [Getting started](#getting-started) &nbsp;|&nbsp; [Using with gulp](#using-with-gulp) &nbsp;|&nbsp; [Builders](#builders)
+
+---
+
+
+## What is Exhibit?
+
+Exhibit is a library that helps you set up an **incremental flow of files** from one directory to another, via an arbitrary series of build steps.
+
+It has a middleware-style API:
+
+```js
+exhibit('./src')
+  .use(babel())
+  .use(sass())
+  .use(autoprefixer())
+  .use(rev())
+  .build('./dist', {watch: true});
+```
+
+The above snippet reads all files in `./src`, pushes the whole app through four ‘builders’, and outputs the result to `./dist`.
+
+Then, because of `{watch: true}`, it watches `./src` for incremental changes, only doing the minimum work possible for each rebuild.
+
+
+## Features
+
+- designed for the smoothest watch-and-rebuild experience
+- rebuilds are 100% incremental, therefore insanely fast
+- everything is a plugin
+- modern, promise-driven API
+- clean, clear logging of what's being built
+- no temp files
+
+It's ideal for building static sites, single-page apps, browser extensions, and other front-end projects. And you can wire it up to BrowserSync with one line.
+
+
+## The fastest rebuilds ever
+
+A parallelized front end build system often feels like [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js). The linked example works well, but it's hard to follow, and it's still inefficient when it comes to rebuilds.
+
+Exhibit keeps things simple with a series approach. And a *lot* of in-memory caching.
+
+![Exhibit flowchart](docs/flowchart.png)
+
+Every cache contains the entire application 'as it stands'. This, combined with a smart batching system that remembers dependencies per-step across multiple builds, means Exhibit knows exactly what needs to be rebuilt after each change.
+
+That makes it faster where it really matters: **rebuilding after small changes**.
+
+For the first time, it's possible to make a soup-to-nuts chain of build steps comprising preprocessors, bundlers, script/stylesheet concatenation, minification, image optimisation, and revving – and make it respond automatically to incremental changes with minimal effort at each step.
+
+**An example:** let's say you've got your Exhibit chain running with `{watch: true}`, and you edit `_foo.scss` (somewhere within your `src` directory). Exhibit reacts by rebuilding this file. But when it comes to the Sass builder, Exhibit *remembers* that this builder imported that file last time it was building `main.scss` (but not when it was building `other.scss`). So it takes `main.scss` (from the in-memory cache before Sass) and tells Sass to rebuild it again.
+
+
+## Getting started
+
+Check out the examples [in this repo](examples).
+
+<!-- - [Web Starter Kit](https://github.com/exhibitjs/web-starter-kit) – a fork of Google's excellent front end boilerplate project, modified to use Exhibit. -->
+
+<!-- - Yeoman generator: [exhibit-webapp](https://github.com/exhibitjs/generator-exhibit-webapp) – a fork of Yeoman's gulp-webapp project, modified to use Exhibit. -->
+
+(Yeoman generator and Web Starter Kit fork coming soon.)
+
+
+## Installation
 
 ```sh
 $ npm install exhibit
 ```
 
-
-## Overview
-
-Exhibit sets up an incremental flow of files from one directory to another, via composable transformation plugins.
-
-It's not an overbearing CLI tool. It's just a regular Node library with a very simple API:
-
-```js
-var exhibit = require('exhibit');
-
-exhibit('folder-a')
-  .use(babel())
-  .use(sass())
-  .use(autoprefixer())
-  .build('folder-b', {watch: true});
-```
-
-It handles inter-file dependencies automatically. It does the minimal work on each rebuild. It involves no temp files, and it's *fast*.
+Requires [Node 4](https://nodejs.org/en/).
 
 
-## Demo
+## Documentation
 
-Until proper docs exist, here is a [demo repo](https://github.com/exhibitjs/demo) to show how Exhibit can be used to build a simple front-end app.
+Simply `require('exhibit')` and use it in any Node script.
+
+The core API is tiny:
+
+- [`exhibit('src')`](docs/api/exhibit.md) returns an Exhibit chain that will read from the './src' directory.
+
+- [`.use(builder)`](docs/api/use.md) adds a builder to the chain.
+
+- [`.build('dist')`](docs/api/build.md) starts building to `./dist`' and optionally starts a server.
+
+See the [full docs](docs) for more details.
 
 
-## Building
+## Builders
 
-The first argument to `.build()` is the destination path. An empty dir will be created here if necessary.
+### Loading builders from plugins
 
-The optional second argument is an options object with these boolean properties:
+Builder plugins are simply NPM modules named `exhibit-builder-*` and include:
 
-- `watch` – watches the source directory and rebuilds files incrementally when they change. (Omit this if you just want to build and then exit.)
+- Babel
+- Browserify
+- Sass
+- Autoprefixer
+- Uglify
 
-- `serve` – serves up the destination directory using Connect.
+More coming soon: Webpack, Jade, Less, Stylus. ([Open an issue](https://github.com/exhibitjs/exhibit/issues) to request another.)
 
-- `browserSync` – wires everything up with BrowserSync so you get live-reloading pages whenever changes are written.
+#### Auto-loading builders
 
-- `open` – opens the site in your browser (this option only works in conjunction with `serve`).
-
-- `verbose` – prints out a **lot** of extra info about what's going in and out of each plugin.
-
-(Shortcut: you can pass `true` instead of an options object – this enables the four options `watch`, `serve`, `browserSync` and `open` all at once. This is a typical configuration for hacking on a frontend app.)
-
-### Callbacks?
-
-The `.build()` method returns a promise, so if you want to be notified when it's done: `.build('folder-b').then(function (changes) {...});`. (NB. 'done' means all files have been built – note that if `watch` is enabled, Exhibit will continue watching and rebuilding even after this promise resolves, until you exit the process or call `stop()`.)
-
-## Load paths
-
-If you have third-party components in other directories, you can tell Exhibit about them like this:
+You can skip a lot of `require` calls by [auto-loading builder plugins](docs/api/use.md#auto-loading-plugins).
 
 ```js
-exhibit('folder-a', 'bower_components', 'moar_components' /* etc */)
-  .use(sass())
-  .use(coffee())
-  .build('folder-b');
-```
-
-- The first argument to `exhibit` is your app's source directory, which is what gets built.
-- Any subsequent arguments are taken as extra load paths that will be made available for plugins to import from.
-
-
-## Plugins
-
-So far:
-
-- [browserify](https://github.com/exhibitjs/exhibit-browserify) - bundles scripts with [Browserify](http://browserify.org/)
-- [sass](https://github.com/exhibitjs/exhibit-sass) – compiles SCSS files with node-sass
-- [babel](https://github.com/exhibitjs/exhibit-babel) – compiles JS files with Babel
-- [coffee](https://github.com/exhibitjs/exhibit-coffee) – compiles CoffeeScript files
-- [include-assets](https://github.com/exhibitjs/exhibit-include-assets) – checks your `<script>` or `<link rel="stylesheet">` tags and imports any missing files from your load paths
-- [concat](https://github.com/exhibitjs/exhibit-concat) – concatenate adjacent scripts/stylesheets and update the corresponding HTML tags
-- [uglify](https://github.com/exhibitjs/exhibit-uglify) – minify JavaScript
-- clean-css (coming soon)
-- inline (coming soon)
-
-[Open an issue](https://github.com/exhibitjs/exhibit/issues) if you want to request a plugin.
-
-
-### Loading plugins automatically
-
-If you've installed `exhibit-*` modules in your `package.json`, you can load them all in one go, like this:
-
-```js
-var exhibit = require('exhibit');
-var $ = exhibit.plugins();
-
-exhibit('folder-a')
-  .use($.sass())
-  .use($.coffee())
-  .build('dist', {watch: true});
-```
-
-### Writing a plugin
-
-Plugins are functions that take in a path and contents, and return one or more files. You can write them inline like this:
-
-```js
-exhibit('folder-a')
-  .use(function (path, contents) {
-    // add a copyright banner to the top of all CSS files
-    if (/\.css$/.test(path)) {
-      contents = '/* Copyright 2015 Me */\n\n' + contents;
-    }
-
-    return contents;
-  });
+  .use('sass')
+  .use('autoprefixer')
+  .use('babel')
 ```
 
 
-#### More advanced plugins
+### Write builders inline
 
-> 🐝 All this will be explained better in proper authoring/publishing docs, soon.
+A builder is [just a function](docs/api/use.md#passing-a-function).
 
-- Async stuff: just return a promise that resolves with the 'real' return value.
+```js
+  .use(function (path, contents) {...})
+```
 
-- If you encounter an error in whatever you're building, just throw or reject. Exhibit will catch and present the error.
 
-- Importing other files: use `this.import(path)`. This returns a promise that resolves with an object containing `path` (the resolved file path – might be different from what you requested) and `contents` (a buffer). Using `this.import()` instead of `fs` to import files has a few benefits:
-  1. It allows Exhibit to keep track of inter-file dependencies so it can automate incremental rebuilds and deletions correctly.
-  2. It allows you to import files that may have already been modified by a previous plugin.
-  3. It will automatically defer to the load paths if it's not found.
+## Using with gulp
 
-- Outputting multiple/other paths: instead of returning the contents directly, return an object with file paths as keys and buffers/strings as contents.
+Exhibit is not related to gulp.
 
-- Preventing anything being output for the given path: just return `null` or `undefined`.
+But they work great together because `.build()` returns a promise, and gulp likes promises:
 
+```js
+gulp.task('build', function () {
+  return exhibit('src')
+    .use(babel())
+    .use(sass())
+    .build('dist');
+});
+```
+
+
+## Contributing
+
+Contributions are **very** welcome. This project is at an early stage so feel free to [open an issue](https://github.com/exhibitjs/exhibit/issues) if you have any questions/feedback/ideas.
 
 ## Licence
 
 MIT
-
-
-<!-- badge URLs -->
-[npm-url]: https://npmjs.org/package/exhibit
-[npm-image]: https://img.shields.io/npm/v/exhibit.svg?style=flat-square
-
-[travis-url]: http://travis-ci.org/exhibitjs/exhibit
-[travis-image]: https://img.shields.io/travis/exhibitjs/exhibit.svg?style=flat-square
-
-[depstat-url]: https://david-dm.org/exhibitjs/exhibit
-[depstat-image]: https://img.shields.io/david/exhibitjs/exhibit.svg?style=flat-square

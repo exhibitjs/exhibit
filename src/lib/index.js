@@ -6,18 +6,22 @@ import path from 'path';
 import isString from 'lodash/lang/isString';
 import isBoolean from 'lodash/lang/isBoolean';
 import isFunction from 'lodash/lang/isFunction';
+import isArray from 'lodash/lang/isArray';
 import assign from 'lodash/object/assign';
 import {map} from 'in-place';
 import Controller from './controller';
-import autoLoadPlugins from './auto-load-plugins';
 import genericImporter from './bundled-plugins/generic-importer';
+import {colours} from 'exhibit-core';
+
+const {red, green} = colours;
 
 const ORIGIN = Symbol();
 const IMPORTERS = Symbol();
 const CONTROLLER = Symbol();
-const BUILDERS = Symbol();
+const USE_CALLS = Symbol();
 
 const cwd = process.cwd();
+const validPluginName = /^[a-z]([a-z]|(-(?!-)))+[a-z]$/; // http://refiddle.com/hfy
 
 
 const buildDefaults = {
@@ -46,16 +50,16 @@ class Exhibit {
   constructor({origin, importers = []}) {
     this[ORIGIN] = origin;
     this[IMPORTERS] = importers;
-    this[BUILDERS] = [];
+    // this[BUILDERS] = [];
+    this[USE_CALLS] = [];
   }
 
 
   /**
    * Adds a step to the build sequence.
    */
-  use(builder) {
-    if (!isFunction(builder)) throw new TypeError('Expected .use() argument to be a function.');
-    this[BUILDERS].push(builder);
+  use(...args) {
+    this[USE_CALLS].push(args);
     return this;
   }
 
@@ -81,20 +85,76 @@ class Exhibit {
     options = assign({}, buildDefaults, useWatchDefaults ? watchDefaults : null, options);
     if (!options.serve) options.open = false;
 
-    // walk up the chain to find the first exhibit instance, and collect all builders found along the way
+
+    // walk up the chain to find the first exhibit instance, and collect all their 'use' calls too
     let firstExhibit = this;
-    const builders = this[BUILDERS].slice();
     while (firstExhibit[ORIGIN] instanceof Exhibit) {
       firstExhibit = firstExhibit[ORIGIN];
 
-      for (let i = firstExhibit[BUILDERS].length - 1; i >= 0; i--) {
-        builders.unshift(firstExhibit[BUILDERS][i]);
+      for (let i = firstExhibit[USE_CALLS].length - 1; i >= 0; i--) {
+        this[USE_CALLS].unshift(firstExhibit[USE_CALLS][i]);
       }
     }
-
     console.assert(isString(firstExhibit[ORIGIN]), 'origin of first exhibit should be a string');
 
-    // create the controller
+
+    // resolve the build sequence to an array of builder functions
+    const failedImports = [];
+    const builders = [];
+
+    this[USE_CALLS].forEach((args, i) => {
+      const firstArg = args[0];
+
+      if (isString(firstArg)) {
+        if (!validPluginName.test(firstArg)) throw new Error(`Invalid name for lazy-loaded builder: ${firstArg}`);
+
+        const moduleName = `exhibit-builder-${firstArg}`;
+        let module;
+        try {
+          module = require(moduleName); // eslint-disable-line global-require
+        }
+        catch (error) {
+          console.log('error', error);
+          failedImports.push(moduleName);
+          return;
+        }
+
+        let fns = module.apply(null, args.slice(1));
+
+        if (!isArray(fns)) fns = [fns];
+
+        fns.forEach(fn => {
+          if (!isFunction(fn)) {
+            throw new Error(`The module ${moduleName} returned an invalid builder.`);
+          }
+
+          builders.push(fn);
+        });
+      }
+      else if (isFunction(firstArg)) {
+        builders.push(firstArg);
+      }
+      else throw new TypeError(`A call to .use() (#${i}) had invalid arguments.`);
+    });
+
+    // exit with a useful message if any lazy imports failed
+    if (failedImports.length) {
+      let command = `  npm install --save-dev`;
+      if (failedImports.length === 1) command += (' ' + failedImports[0]);
+      else {
+        for (const moduleName of failedImports) {
+          command += ' \\\n    ' + moduleName;
+        }
+      }
+      command += '\n';
+
+      console.log(red(`\nFailed to import ${failedImports.length} builder${failedImports.length > 1 ? 's' : ''}.`));
+      console.log(`\nTry installing ${failedImports.length > 1 ? 'them' : 'it'} with this command:\n`);
+      console.log(green(command));
+      process.exit(1);
+    }
+
+    // create and run a controller
     this[CONTROLLER] = new Controller({
       originDir: firstExhibit[ORIGIN],
       destDir,
@@ -104,7 +164,6 @@ class Exhibit {
       cwd,
     });
 
-    // run it
     return this[CONTROLLER].execute();
   }
 
@@ -145,6 +204,3 @@ export default function exhibit(origin, ...importers) {
 
   throw new TypeError('Expected first argument to be a string or another Exhibit instance.');
 }
-
-
-exhibit.plugins = autoLoadPlugins;

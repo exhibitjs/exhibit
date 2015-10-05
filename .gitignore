@@ -2,3 +2,4 @@
 /dist/
 /testing/tmp-*/
 /testing/bower_components/
+/examples/*/dist/

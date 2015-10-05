@@ -48,18 +48,15 @@ export default class Reporter {
 
 
   countError() {
-    this.errorCount++; // eslint-disable-line space-unary-ops
-    // https://github.com/eslint/eslint/issues/2764
+    this.errorCount++;
   }
 
 
   end() {
-    const symbol = '✓'; // used to be: this.errorCount ? '✗' : '✓'
-
     console.log(
       indent + (this.errorCount ?
-        red(symbol) + grey(` (with ${this.errorCount} error` + (this.errorCount > 1 ? 's)' : ')')) :
-        green(symbol)
+        red('✓') + grey(` (with ${this.errorCount} error` + (this.errorCount > 1 ? 's)' : ')')) :
+        green('✓')
       ),
 
       grey(prettyHRTime(process.hrtime(this.startTime))), '\n'
