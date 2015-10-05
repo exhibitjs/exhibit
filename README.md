@@ -5,7 +5,7 @@
   <p><b>Real-time incremental build.</b></p>
   <br><br>
   <p><a href="https://npmjs.org/package/exhibit"><img alt="NPM version" src="https://img.shields.io/npm/v/exhibit.svg?style=flat-square"></a> &nbsp;<a href="http://travis-ci.org/exhibitjs/exhibit"><img alt="Build Status" src="https://img.shields.io/travis/exhibitjs/exhibit.svg?style=flat-square"></a> &nbsp;<a href="https://david-dm.org/exhibitjs/exhibit"><img alt="Dependency Status" src="https://img.shields.io/david/exhibitjs/exhibit.svg?style=flat-square"></a></p>
-  <p><i>(Requires Node 4)</i></p>
+  <p><i>Requires Node 4</i></p>
 </div>
 
 
@@ -58,7 +58,7 @@ Exhibit keeps things simple with a series approach. And a *lot* of in-memory cac
 
 Every cache contains the entire application 'as it stands'. This, combined with a smart batching system that remembers dependencies per-step across multiple builds, means Exhibit knows exactly what needs to be rebuilt after each change.
 
-That makes it faster where it really matters: **rebuilding after small changes**.
+This makes it faster where it really matters: **rebuilding after small changes**.
 
 For more info, see the [technical overview](docs/technical-overview.md).
 
@@ -71,7 +71,7 @@ The best way to start (for now) is to check out the [examples in this repo](exam
 
 <!-- - Yeoman generator: [exhibit-webapp](https://github.com/exhibitjs/generator-exhibit-webapp) – a fork of Yeoman's gulp-webapp project, modified to use Exhibit. -->
 
-(Coming soon: Yeoman generator, and a fork of Web Starter Kit adapted to use Exhibit.)
+(Coming soon: a Yeoman generator, and a fork of Web Starter Kit adapted to use Exhibit.)
 
 
 ## Installation
