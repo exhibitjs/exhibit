@@ -60,9 +60,7 @@ Every cache contains the entire application 'as it stands'. This, combined with 
 
 That makes it faster where it really matters: **rebuilding after small changes**.
 
-For the first time, it's possible to make a soup-to-nuts chain of build steps comprising preprocessors, bundlers, script/stylesheet concatenation, minification, image optimisation, and revving – and make it respond automatically to incremental changes with minimal effort at each step.
-
-**An example:** let's say you've got your Exhibit chain running with `{watch: true}`, and you edit `_foo.scss` (somewhere within your `src` directory). Exhibit reacts by rebuilding this file. But when it comes to the Sass builder, Exhibit *remembers* that this builder imported that file last time it was building `main.scss` (but not when it was building `other.scss`). So it takes `main.scss` (from the in-memory cache before Sass) and tells Sass to rebuild it again.
+For more info, see the [technical overview](docs/technical-overview.md).
 
 
 ## Getting started
@@ -153,6 +151,7 @@ gulp.task('build', function () {
 ## Contributing
 
 Contributions are **very** welcome. This project is at an early stage so feel free to [open an issue](https://github.com/exhibitjs/exhibit/issues) if you have any questions/feedback/ideas.
+
 
 ## Licence
 
