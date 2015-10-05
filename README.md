@@ -27,14 +27,13 @@ exhibit('./src')
   .use(babel())
   .use(sass())
   .use(autoprefixer())
-  .use(concat())
   .use(rev())
   .build('./dist', {watch: true});
 ```
 
-The above snippet reads all files in `./src`, pushes the whole app through five ‘builders’, and outputs the result to `./dist`.
+The above snippet reads all files in `./src`, pushes the whole app through four ‘builders’, and outputs the result to `./dist`.
 
-Then, because of `{watch: true}`, it watches `./src` for incremental changes – and does the minimum work possible for each rebuild.
+Then, because of `{watch: true}`, it watches `./src` for incremental changes, only doing the minimum work possible for each rebuild.
 
 
 ## Features
