@@ -1,6 +1,6 @@
 var exhibit = require('exhibit');
 
-exhibit('src')
+exhibit('app')
 
   .use('babel')
 

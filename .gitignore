@@ -3,3 +3,4 @@
 /testing/tmp-*/
 /testing/bower_components/
 /examples/*/dist/
+/examples/*/node_modules/

@@ -65,13 +65,13 @@ For more info, see the [technical overview](docs/technical-overview.md).
 
 ## Getting started
 
-Check out the examples [in this repo](examples).
+The best way to start (for now) is to check out the [examples in this repo](examples).
 
 <!-- - [Web Starter Kit](https://github.com/exhibitjs/web-starter-kit) – a fork of Google's excellent front end boilerplate project, modified to use Exhibit. -->
 
 <!-- - Yeoman generator: [exhibit-webapp](https://github.com/exhibitjs/generator-exhibit-webapp) – a fork of Yeoman's gulp-webapp project, modified to use Exhibit. -->
 
-(Yeoman generator and Web Starter Kit fork coming soon.)
+(Coming soon: Yeoman generator, and a fork of Web Starter Kit adapted to use Exhibit.)
 
 
 ## Installation
@@ -104,11 +104,11 @@ See the [full docs](docs) for more details.
 
 Builder plugins are simply NPM modules named `exhibit-builder-*` and include:
 
-- Babel
-- Browserify
-- Sass
-- Autoprefixer
-- Uglify
+- [Babel](https://github.com/exhibitjs/exhibit-builder-babel)
+- [Browserify](https://github.com/exhibitjs/exhibit-builder-browserify)
+- [Sass](https://github.com/exhibitjs/exhibit-builder-sass)
+- [Autoprefixer](https://github.com/exhibitjs/exhibit-builder-autoprefixer)
+- [Uglify](https://github.com/exhibitjs/exhibit-builder-uglify)
 
 More coming soon: Webpack, Jade, Less, Stylus. ([Open an issue](https://github.com/exhibitjs/exhibit/issues) to request another.)
 
