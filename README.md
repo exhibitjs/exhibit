@@ -41,6 +41,7 @@ Then, because of `{watch: true}`, it watches `./src` for incremental changes, on
 - designed for the smoothest watch-and-rebuild experience
 - rebuilds are 100% incremental, therefore insanely fast
 - everything is a plugin
+- modern, promise-driven API
 - clean, clear logging of what's being built
 - no temp files
 
@@ -49,11 +50,11 @@ It's ideal for building static sites, single-page apps, browser extensions, and 
 
 ## The fastest rebuilds ever
 
-A heavily parallelized front end build system can start to look like [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js). The linked example works well, but it's hard to follow, and it's still inefficient when it comes to rebuilds.
+A parallelized front end build system often feels like [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js). The linked example works well, but it's hard to follow, and it's still inefficient when it comes to rebuilds.
 
 Exhibit keeps things simple with a series approach. And a *lot* of in-memory caching.
 
-![Exhibit flowchart](./docs/flowchart.png)
+![Exhibit flowchart](docs/flowchart.png)
 
 Every cache contains the entire application 'as it stands'. This, combined with a smart batching system that remembers dependencies per-step across multiple builds, means Exhibit knows exactly what needs to be rebuilt after each change.
 
@@ -66,7 +67,7 @@ For the first time, it's possible to make a soup-to-nuts chain of build steps co
 
 ## Getting started
 
-Check out the examples [in this repo](./examples).
+Check out the examples [in this repo](examples).
 
 <!-- - [Web Starter Kit](https://github.com/exhibitjs/web-starter-kit) – a fork of Google's excellent front end boilerplate project, modified to use Exhibit. -->
 
@@ -90,13 +91,13 @@ Simply `require('exhibit')` and use it in any Node script.
 
 The core API is tiny:
 
-- [`exhibit('src')`](./docs/api/exhibit.md) returns an Exhibit chain that will read from the './src' directory.
+- [`exhibit('src')`](docs/api/exhibit.md) returns an Exhibit chain that will read from the './src' directory.
 
-- [`.use(builder)`](./docs/api/use.md) adds a builder to the chain.
+- [`.use(builder)`](docs/api/use.md) adds a builder to the chain.
 
-- [`.build('dist')`](./docs/api/build.md) initiates building to the `./dist`' directory and returns a promise.
+- [`.build('dist')`](docs/api/build.md) starts building to `./dist`' and optionally starts a server.
 
-See the [full docs](./docs) for more details.
+See the [full docs](docs) for more details.
 
 
 ## Builders
@@ -113,12 +114,24 @@ Builder plugins are simply NPM modules named `exhibit-builder-*` and include:
 
 More coming soon: Webpack, Jade, Less, Stylus. ([Open an issue](https://github.com/exhibitjs/exhibit/issues) to request another.)
 
-**ProTip:** you can auto-require builders by passing a string, e.g. `.use('babel')`. [More info](./docs/api/use.md).
+#### Auto-loading builders
+
+You can skip a lot of `require` calls by [auto-loading builder plugins](docs/api/use.md#auto-loading-plugins).
+
+```js
+  .use('sass')
+  .use('autoprefixer')
+  .use('babel')
+```
 
 
 ### Write builders inline
 
-A builder is just a function: `.use(function () {...})`. [See `.use()` docs](./docs/api/use.md) for more details.
+A builder is [just a function](docs/api/use.md#passing-a-function).
+
+```js
+  .use(function (path, contents) {...})
+```
 
 
 ## Using with gulp
