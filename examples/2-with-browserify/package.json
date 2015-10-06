@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "exhibit": "*",
+    "exhibit-builder-browserify": "*",
+    "exhibit-builder-coffee": "*",
+    "exhibit-builder-babel": "*"
+  }
+}

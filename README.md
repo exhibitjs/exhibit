@@ -76,11 +76,11 @@ The best way to start (for now) is to check out the [examples in this repo](exam
 
 ## Installation
 
+Requires [Node 4](https://nodejs.org/en/).
+
 ```sh
 $ npm install exhibit
 ```
-
-Requires [Node 4](https://nodejs.org/en/).
 
 
 ## API

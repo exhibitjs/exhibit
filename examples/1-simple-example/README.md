@@ -12,4 +12,4 @@ It creates a simple chain of two builders that both operate on JavaScript files 
 
 The built-in web server should start automatically and open in your browser (because the `serve` and `open` options are enabled).
 
-Now try editing files in the `app` directory – whenever you save a file, you should see the changes reflected in your browser instantly thanks to BrowserSync.
+Now try editing files in the `./app` directory – whenever you save a file, you should see the changes reflected in your browser instantly thanks to BrowserSync.
