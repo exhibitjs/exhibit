@@ -50,7 +50,7 @@ It's ideal for building static sites, single-page apps, browser extensions, and 
 
 ## The fastest rebuilds ever
 
-A parallelized front end build system often feels like [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js). The linked example works well, but it's hard to follow, and it's still inefficient when it comes to rebuilds.
+Parallelized build systems often feel like [task spaghetti](https://github.com/google/web-starter-kit/blob/master/gulpfile.babel.js). The linked example works well, but it's hard to follow, and it's still inefficient when it comes to rebuilds.
 
 Exhibit keeps things simple with a series approach. And a *lot* of in-memory caching.
 
