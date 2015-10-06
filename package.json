@@ -1,7 +1,7 @@
 {
   "name": "exhibit",
   "description": "Real-time incremental build.",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "author": "Callum Locke",
   "bugs": {
     "url": "https://github.com/exhibitjs/exhibit/issues"
