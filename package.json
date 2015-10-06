@@ -40,7 +40,6 @@
     "glob": "^5.0.15",
     "mocha": "^2.3.3",
     "nodemon": "^1.7.1",
-    "rimraf": "^2.4.3",
     "source-map-support": "^0.3.2",
     "wrench": "^1.5.8"
   },
@@ -54,9 +53,6 @@
   ],
   "jsnext:main": "src/lib/index.js",
   "homepage": "https://github.com/exhibitjs/exhibit",
-  "keywords": [
-    "build"
-  ],
   "license": "MIT",
   "main": "dist/lib/index.js",
   "repository": {
@@ -66,7 +62,6 @@
   "scripts": {
     "build": "babel src --out-dir dist",
     "buildwatch": "babel src --out-dir dist --watch",
-    "clean": "rimraf dist",
     "prepublish": "npm run build && npm test",
     "test": "eslint . && cd dist && mocha test",
     "testwatch": "cd dist && mocha --watch"
