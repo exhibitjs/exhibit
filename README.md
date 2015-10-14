@@ -32,7 +32,7 @@ var app = exhibit()
 app.build('src', 'public', {watch: true});
 ```
 
-But unlike Express, it's not for running on a production server. It's just for processing static files – it pushes everything from one directory to another via your chosen build steps (e.g. `src/main.scss` → `public/main.css`).
+But unlike Express, it's not for running on a production server. It's just for processing static files – it pushes everything from one directory to another via your chosen build steps (e.g.&nbsp;`src/main.scss`&nbsp;→&nbsp;`public/main.css`).
 
 **So it's like gulp?** Not really – it has no CLI and it's not a task runner. It's just a nice little API for managing a series of changes to a bunch of files. It solves some fundamental problems that pla You can use Exhibit *with* gulp, or with another task runner ...or with good old `$ node`.
 
