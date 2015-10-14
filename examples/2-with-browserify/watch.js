@@ -1,7 +1,12 @@
 var exhibit = require('exhibit');
 
-exhibit('app')
+exhibit()
   .use('babel')
   .use('coffee')
   .use('browserify', 'main.js')
-  .build('dist', true);
+  .build('app', 'dist', {
+    watch: true,
+    serve: true,
+    browserSync: true,
+    open: true
+  });

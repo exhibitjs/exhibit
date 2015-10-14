@@ -1,4 +1,4 @@
-import {extname} from 'path';
+import path from 'path';
 
 const bsVersion = require('browser-sync/package.json').version;
 
@@ -12,12 +12,9 @@ const getSnippet = port => {
   );
 };
 
-
 export default function (port) {
-  return function exhibitBrowserSyncSnippet(path, contents) {
-    if (extname(path) !== '.html') return contents;
-
-    const result = {};
+  return function exhibitBrowserSyncSnippet({file, contents}) {
+    if (path.extname(file) !== '.html') return contents;
 
     // decide where to put the snippet (crude but fast)
     const html = contents.toString();
@@ -25,12 +22,10 @@ export default function (port) {
     if (index === -1) index = html.lastIndexOf('</html>');
     if (index === -1) index = html.length;
 
-    result[path] = (
+    return (
       html.substring(0, index) +
       getSnippet(port) +
       html.substring(index)
     );
-
-    return result;
   };
 }

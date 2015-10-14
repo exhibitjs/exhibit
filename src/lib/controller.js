@@ -1,4 +1,3 @@
-import {join, relative, resolve as resolvePath, sep as pathSep, isAbsolute} from 'path';
 import browserSyncSnippet from './bundled-plugins/browser-sync-snippet';
 import genericImporter from './bundled-plugins/generic-importer';
 import {param, ArrayOf, Optional} from 'decorate-this';
@@ -15,6 +14,7 @@ import {filter} from 'in-place';
 import Promise from 'bluebird';
 import Origin from './origin';
 import {stat} from 'sander';
+import path from 'path';
 import opn from 'opn';
 
 const {red, grey, green, yellow} = colours;
@@ -41,22 +41,24 @@ export default class Controller {
     cwd: String,
     originDir: String,
     destDir: String,
-    importers: ArrayOf(Function),
+    // importers: ArrayOf(Function),
+    loadPaths: Optional(ArrayOf(String)),
     builders: ArrayOf(Function),
     buildOptions: {
-      serve: Optional(Boolean), // todo: accept custom options too (port?)
-      browserSync: Optional(Boolean), // same here (general BS options)
+      serve: Optional(Boolean),
+      browserSync: Optional(Boolean),
       watch: Optional(Boolean),
       open: Optional(Boolean),
       verbose: Optional(Boolean),
+      importers: Optional(Array),
       autoImporters: Optional(Boolean),
     },
   }, 'Options')
-  init({cwd, originDir, destDir, importers, builders, buildOptions}) {
+  init({cwd, originDir, destDir, builders, buildOptions}) {
     this[CWD] = cwd;
-    this[ORIGIN_DIR] = resolvePath(cwd, originDir);
-    this[DEST_DIR] = resolvePath(cwd, destDir);
-    this[IMPORTERS] = importers;
+    this[ORIGIN_DIR] = path.resolve(cwd, originDir);
+    this[DEST_DIR] = path.resolve(cwd, destDir);
+    this[IMPORTERS] = buildOptions.importers || [];
     this[BUILDERS] = builders;
     this[BUILD_OPTIONS] = buildOptions;
     this[REPORTER] = null;
@@ -70,8 +72,8 @@ export default class Controller {
     const originDir = this[ORIGIN_DIR];
     const destDir = this[DEST_DIR];
     const buildOptions = this[BUILD_OPTIONS];
-    const originDirRelative = relative(cwd, originDir);
-    const destDirRelative = relative(cwd, destDir);
+    const originDirRelative = path.relative(cwd, originDir);
+    const destDirRelative = path.relative(cwd, destDir);
 
     // ensure destination directory exists (TODO: why are we waiting for it like this?)
     await mkdirp(destDir);
@@ -137,12 +139,19 @@ export default class Controller {
     // (this is necessary for when eg. a sass bower component file imports another file from its own component - we want to handle this quickly without invoking other weirder importers like bower)
     this[IMPORTERS].push(genericImporter());
 
+    // and for any configured load paths
+    if (buildOptions.loadPaths) {
+      buildOptions.loadPaths.forEach(loadPath => {
+        this[IMPORTERS].push(genericImporter(path.resolve(cwd, loadPath)));
+      });
+    }
+
     // add any auto importers
     const importersReady = buildOptions.autoImporters ? Promise.props({
       bower: (async () => {
         let s;
         try {
-          s = await stat(join(cwd, 'bower.json'));
+          s = await stat(path.join(cwd, 'bower.json'));
         }
         catch (error) {
           if (error.code !== 'ENOENT') throw error;
@@ -152,19 +161,19 @@ export default class Controller {
         // the bower_components dir.
 
         if (s && s.isFile()) {
-          this[IMPORTERS].push(bowerImporter(join(cwd, 'bower_components')));
+          this[IMPORTERS].push(bowerImporter(path.join(cwd, 'bower_components')));
           return true;
         }
 
         return false;
       })(),
-      // later can add other ones here...
+      // later can add others here...
     }) : Promise.resolve();
 
     // prime the source and destination folders (read all their contents from disk)
     const [initialInFiles] = await Promise.join(this[ORIGIN].prime(), this[DEST].prime());
-    for (const file of initialInFiles) {
-      file.path = resolvePath(originDir, file.path);
+    for (const f of initialInFiles) {
+      f.file = path.resolve(originDir, f.file);
     }
 
     // add the browserSyncSnippet builder if appropriate
@@ -189,7 +198,7 @@ export default class Controller {
     // report nicely any errors emitted during a batch
     batchRunner.on('error', error => {
       const reporter = this[REPORTER] || new Reporter().start('Out-of-batch error!');
-      reporter.countError();
+      let isWarning;
 
       reporter.say(); // leave a blank line
 
@@ -198,11 +207,11 @@ export default class Controller {
         const builder = error.builder;
         const originalError = error.originalError;
 
-        const isWarning = originalError && Boolean(originalError.warning);
+        isWarning = originalError && Boolean(originalError.warning);
 
         reporter.say(
           grey((isWarning ? 'warning' : 'error') + ' from ') + builder.name +
-          grey(' while building ') + relative(cwd, error.buildPath) + grey(':')
+          grey(' while building ') + path.relative(cwd, error.buildPath) + grey(':')
         );
 
         // if we've got an original error from the builder, print that
@@ -211,10 +220,10 @@ export default class Controller {
             const errorColour = isWarning ? yellow : red;
 
             reporter.say('\n' + errorColour(originalError.message), 2);
-            if (originalError.path) {
+            if (originalError.file) {
               reporter.say(
-                '\n' + errorColour(relative(cwd, originalError.path) +
-                  originalError.pathSuffix),
+                '\n' + errorColour(path.relative(cwd, originalError.file) +
+                  originalError.suffix),
                 2
               );
             }
@@ -232,11 +241,13 @@ export default class Controller {
 
       // handle any other errors generically
       else if (error instanceof Error) {
-        reporter.say(red('unknown error:') + '\n' + clearTrace(error));
+        reporter.say(red('unexpected error:') + '\n' + clearTrace(error));
       }
       else {
         reporter.say(red('non-error thrown:') + '\n' + error);
       }
+
+      if (!isWarning) reporter.errors.push(error);
 
       reporter.say();
 
@@ -248,7 +259,7 @@ export default class Controller {
     if (buildOptions.browserSync) {
       batchRunner.on('batch-complete', writtenChanges => {
         browserSyncReady.then(bs => {
-          bs.reload(writtenChanges.map(change => change.path));
+          bs.reload(writtenChanges.map(change => change.file));
         });
       });
     }
@@ -259,13 +270,13 @@ export default class Controller {
       // capture all destination writes that occur during the first batch
       // (so afterwards we can decide which files, if any, to delete)
       const initialWrites = [];
-      const destWritesListener = path => {
-        initialWrites.push(path);
+      const destWritesListener = file => {
+        initialWrites.push(file);
       };
       this[DEST].on('writing', destWritesListener);
 
       // run the first batch now, with manual reporting
-      const firstReporter = this.startReport(join(originDirRelative, '**', '*'));
+      const firstReporter = this.startReport(path.join(originDirRelative, '**', '*'));
       const changes = await batchRunner.run({files: initialInFiles, autoReport: false, deferrable: false})
         .catch(error => {
           console.error(red('Unhandled exception from initial batch'));
@@ -274,7 +285,7 @@ export default class Controller {
 
       if (changes) {
         console.assert(
-          changes.every(change => isAbsolute(change.path)),
+          changes.every(change => path.isAbsolute(change.file)),
           'Expected all changes from BatchRuner#run() to have absolute paths'
         );
       }
@@ -284,7 +295,7 @@ export default class Controller {
       const initialDeletions = await this[DEST].purgeAllExcept(initialWrites);
 
       // report events from the first batch
-      if (firstReporter.errorCount) firstReporter.say();
+      if (firstReporter.errors.length) firstReporter.say();
 
       if (changes) {
         changes.forEach(change => firstReporter.change(change));
@@ -293,12 +304,12 @@ export default class Controller {
         filter(initialDeletions, identity);
 
         initialDeletions.forEach(change => {
-          change.path = resolvePath(originDir, change.path);
+          change.file = path.resolve(originDir, change.file);
           firstReporter.change(change);
         });
       }
 
-      if (!changes && !initialDeletions) {
+      if (!changes.length && !initialDeletions.length) {
         firstReporter.say(grey('[no changes]'));
       }
 
@@ -307,7 +318,7 @@ export default class Controller {
       const serverURL = buildOptions.serve ? `http://localhost:${ports.server}/` : null;
       const bsUIURL = buildOptions.browserSync ? `http://localhost:${ports.bsUI}/` : null;
       if (buildOptions.serve || buildOptions.browserSync || buildOptions.watch) {
-        firstReporter.say();
+        // firstReporter.say();
 
         if (buildOptions.serve) {
           firstReporter.say(
@@ -324,7 +335,7 @@ export default class Controller {
         if (buildOptions.watch) {
           firstReporter.say(
             green('watching ') +
-            grey(originDirRelative + pathSep + '**')
+            grey(originDirRelative + path.sep + '**')
           );
         }
 
@@ -346,7 +357,7 @@ export default class Controller {
 
         this[ORIGIN].on('change', change => {
           // changes coming from the origin will be relative, so make them absolute
-          change.path = resolvePath(originDir, change.path);
+          change.file = path.resolve(originDir, change.file);
 
           // buffer up changes that are very close together, then run them as a batch
           if (bufferTimeout) clearTimeout(bufferTimeout);
@@ -365,9 +376,23 @@ export default class Controller {
       // relativise the paths of the final changes before returning
       if (changes) {
         for (const change of changes) {
-          console.assert(isAbsolute(change.path));
-          change.path = relative(originDir, change.path);
+          console.assert(path.isAbsolute(change.file));
+          change.file = path.relative(originDir, change.file);
         }
+      }
+
+      // reject if there were any errors in the first batch
+      if (firstReporter.errors.length) {
+        const error = new Error(
+          `Exhibit: ${firstReporter.errors.length} build error${firstReporter.errors.length > 1 ? 's' : ''} occurred`
+        );
+
+        Object.defineProperty(error, 'errors', {
+          value: firstReporter.errors,
+          enumerable: true,
+        });
+
+        throw error;
       }
 
       // resolve the initial `.build()` call with the changes
@@ -393,7 +418,6 @@ export default class Controller {
     this[REPORTER].end(symbol);
     delete this[REPORTER];
   }
-
 
   /**
    * Closes anything that's keeping the process open.

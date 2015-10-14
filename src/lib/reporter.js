@@ -2,15 +2,13 @@ import prettyHRTime from 'pretty-hrtime';
 import {colours} from 'exhibit-core';
 import path from 'path';
 
-const {green, red, grey} = colours;
-
 const CWD = Symbol();
 const DEST_DIR = Symbol();
 const ORIGIN_DIR = Symbol();
 const DEST_DIR_RELATIVE = Symbol();
 
+const {green, red, grey} = colours;
 const indent = '  ';
-
 
 export default class Reporter {
   constructor({cwd, originDir, destDir}) {
@@ -18,16 +16,15 @@ export default class Reporter {
     this[ORIGIN_DIR] = originDir;
     this[DEST_DIR] = destDir;
     this[DEST_DIR_RELATIVE] = path.relative(cwd, destDir);
-    this.errorCount = 0;
-  }
 
+    Object.defineProperty(this, 'errors', {value: []});
+  }
 
   start(headline) {
     this.startTime = process.hrtime();
-    console.log('\n' + green('exhibit') + ' ' + grey(headline));
+    console.log('\n' + green('read') + ' ' + grey(headline));
     return this;
   }
-
 
   say(what = '', indentLevel = 0) {
     for (let line of what.split('\n')) {
@@ -35,22 +32,15 @@ export default class Reporter {
     }
   }
 
-
   change(change) {
-    console.assert(path.isAbsolute(change.path), 'Reporter#change() expects absolute paths; got: ' + change.path);
+    console.assert(path.isAbsolute(change.file), 'Reporter#change() expects absolute paths; got: ' + change.file);
 
     this.say(
       green(change.type) + ' ' +
-      path.join(this[DEST_DIR_RELATIVE], path.relative(this[ORIGIN_DIR], change.path)) +
+      path.join(this[DEST_DIR_RELATIVE], path.relative(this[ORIGIN_DIR], change.file)) +
       grey(' (' + change.sizeDifference + ')')
     );
   }
-
-
-  countError() {
-    this.errorCount++;
-  }
-
 
   end() {
     console.log(

@@ -1,83 +1,146 @@
 # Writing a builder
 
-> This document explains how to write a builder inline. See also: [publishing guidelines](./publishing-guidelines.md).
+> This document explains how to write a builder function. See also: [Plugin publishing guidelines](publishing-guidelines.md) if you want to release your builder for other people to use.
 
 A builder is just a function. It's what's passed to `.use()`.
 
-It deals with **one file at a time** (although it may import other files as part of this process) and returns whatever it wants to output to the next build step (or the destination directory, if it's the last builder).
+It deals with **one file at a time** (although it may import other files as part of this process) and returns whatever it wants to output to the next build step (or to the destination directory, if it's the last builder).
+
+#### A note on complexity
+
+Writing a builder is very simple for a 1→1 compilation step such as CoffeeScript or Autoprefixer (one input file → one output file).
+
+It gets more complicated for *n*→1 or *n*→*n* compilations – i.e. anything that needs to import/include/require supporting files, such as Sass, Jade, Browserify, etc. They must be configured to use the import [methods](#methods) for their I/O. This can take a bit of effort, but it's what makes Exhibit fast, and it makes its *end user* API very simple.
 
 
 ## Simple example
 
+Adding a copyright banner to the top of all CSS files:
+
 ```js
-.use(function (path, contents) {
-  // path is a string (an absolute path to the file)
-  // contents is a buffer.
+  .use(function (job) {
+    // prepend a banner if it's a CSS file
+    if (job.ext === '.css') {
+      return '/* Copyright 2015 AwesomeCorp */\n' + job.contents;
+    }
 
-  // prepend a bannder if it's a CSS file
-  if (path.endsWith('.css')) {
-    return '/* Copyright 2015 AwesomeCorp */\n' + content;
-  }
-
-  // 
-  return contents;
-})
+    // other filetypes: just pass them through untouched
+    return job.contents;
+  })
 ```
 
-
-## Arguments
-
-- `path` (string) – the absolute path to the file.
-  + NB. this should be considered a 'virtual' path – it's possible the file was actually created by another builder earlier in the chain.
-- `contents` (buffer) – the contents of the file.
+The job object is expained [below](#the-job).
 
 
 ## What should you return?
 
-You should return whatever you want to output in respect of this file. 
+Your return value is an instruction to write something to the cache following your builder. (Changes in this cache will then be passed to the next builder, or written to the output directory if there are no more builders.)
 
-Returning a string or buffer is just a shortcut for outputting contents to the same path that came in. In many cases, you might want to output to a different path, or multiple paths, depending on the nature of your builder.
+The **type** of your return value changes its meaning:
 
-For example, here's a builder for an imaginary preprocessing language called Foo, which compiles to CSS makes a source map:
+- string/buffer: assigns the given contents to the same path as came in.
+
+- object: allows you to assign contents to custom (and multiple) filenames, using filenames for keys – see example below
+
+- null: writes out nothing for this job. (Effectively blocks the file from getting through.)
+
+- a promise/thenable that resolves with any of the above.
+
+#### Example: outputting to custom paths
+
+Here's a builder for an imaginary preprocessing language called FooScript, which compiles from `.foo` to `.js` and adds an external sourcemap:
 
 ```js
-.use(function (path, contents) {
-  if (path.endsWith('.foo')) {
-    var compiled = foo(contents);
+  .use(function (job) {
+    if (job.ext === '.foo') {
+      var compiled = foo(job.contents.toString());
 
-    var result = {};
-    var cssPath = path.replace(/foo$/, 'css');
-    result[cssPath] = compiled.css;
-    result[cssPath + '.map'] = compiled.map;
-    return result;
-  }
-
-  return contents; // other files
-})
+      var output = {};
+      var jsPath = job.path.replace(/foo$/, 'js');
+      output[jsPath] = compiled.css;
+      output[jsPath + '.map'] = compiled.map;
+      return output;
+    }
+    
+    // pass other filetypes straight through unmodified
+    return job.contents;
+  })
 ```
 
+The filename keys in a results object may be absolute paths (as long as they're subdirectories of the `base`) or they may be relative paths (in which case they'll be resolved from the `base`).
 
-## Async
+#### Always return something
 
-Async is easy: just return a promise and resolve it with your actual results.
+In most cases, if your builder isn't interested in a particular file, it should just return the contents buffer.
 
+If you intend to block a file getting through, return `null` explicitly. Returning nothing (`undefined`) is assumed to be an accident and therefore triggers an error.
 
-## Advanced builders: importing other files
+## The job
 
-> docs coming soon.
+The job object is an instruction for building **one** file. It comes with several properties.
 
+#### Data
+- `contents` (buffer) – the contents of the file.
+- `file` (string) – the absolute path to the file.
+- `ext` (string) – just the extension, e.g. `.css`
+  + NB. this should be considered a 'virtual' path – it's possible the file was actually created by another builder earlier in the chain.
+- `base` (string) – the absolute path of the root of the application (i.e. the origin directory that the Exhibit app is reading files from).
+- `fileRelative` (string) – the file's path relative to the `base`.
 
-## Utility belt
+#### Methods
+- `matches(matcher)` – returns true/false depending on whether the job's relative path matches the given 'matcher'.
+    - A matcher can be a glob/filename or array thereof, and is passed to micromatch.filter() to get an actual filter function, which will be used to test the path. For example, `if (matches('**/*.css')) {...}` is one way to target CSS files.
 
-Exhibit exposes a handful of popular utility libraries to builders via `this.util`, for convenience.
+- `emit(message, [payload])` – the Job class is an event emitter, so you can use this method to emit non-fatal errors (in situations where it makes more sense to emit than throw/reject).
 
-For example, in a builder function, `this.util.micromatch` is micromatch.
+- `importFile(file, [types])` – the main workhorse function for importing a supporting file. For example, if your builder was building SCSS files and encountered `@import 'foo';`, you might want to call this to load `_foo.scss`.
+    - It first tries to find the file in cache preceding your builder, then tries external importers if necessary.
+    - Calling this function also 'registers' with Exhibit that the path of the current job *depends* on the file you're importing. Exhibit will remember this for future rebuilds: if a change comes through for the *imported* file in future, Exhibit will add the original importing file to the batch and rebuild that too.
+    - Returns a promise that resolves with an object with `{file, contents}`, where `file` is the fully resolved path telling you wherever the file was found (which might not be exactly what you requested), and `contents` is a buffer. The promise will reject if the file couldn't be found.
+    - The second argument is an optional array of filetypes such as `['.js', '.jsx']`. This is provided only as a hint to some multi-type external importers like Bower, to set a preference for which filetype(s) you're interested in – it won't be considered if the exact path you requested is found internally in the pipeline.
+
+- `importFirst(files, [types])` – like `import`, but takes an array of possible file paths, checks them one after the other and resolves with the first file found. Useful if you want to try a variety of paths that might satisfy a particular import statement in the code you're building.
+
+- `importInternal`, `importExternal`, `importFirstExternal`, `importFirstInternal` – variants of the above `import*` methods.
+    - While the methods `importFile` and `importFirst` check first internally and then externally, these methods will only do one or the other.
+    - Note that the 'internal' ones return a file (or throw) synchronously, whereas all other import methods return a promise.
+
+#### Utility belt
+
+The following are available at `job.util`, for convenience:
 
 - `lodash` aka `_`
 - `bluebird` aka `Promise`
-- `sander` aka `fs`
+- `sander`
 - `subdir`
 - `micromatch`
-- `SourceError`
+- `SourceError` (you are encouraged to use this to report errors detailing the location of any error)
 - `convertSourceMap`
 - `combineSourceMap`
+
+For example, in a builder function, `job.util.micromatch` is [micromatch](https://github.com/jonschlinkert/micromatch).
+
+
+## Generators
+
+You can also write a builder as a [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction). This will be automatically wrapped as a [Bluebird coroutine](https://github.com/petkaantonov/bluebird/blob/master/API.md#generators) – so you can write it like an [async function](https://jakearchibald.com/2014/es7-async-functions/) (using `yield` instead of `await`).
+
+
+## ES-next
+
+The API's design is optimised for ES2015+ syntax, such as [destructuring](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment) and [computed properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names).
+
+```js
+  .use(function *({ext, file, contents}) {
+    if (ext === '.bar') {
+      const {code, sourceMap} = yield compileBar(contents.toString());
+
+      return {
+        [file]: code,
+        [file + '.map']: sourceMap
+      };
+    }
+
+    return contents;
+  })
+```
