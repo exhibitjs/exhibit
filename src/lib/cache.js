@@ -51,12 +51,17 @@ export default class Cache extends VirtualFolder {
    * Instruct the cache to prime itself by loading in all contents from the disk directory.
    */
   async prime() {
-    const cache = this;
+    if (this[PRIMED]) throw new Error('Cannot prime twice');
+    this[PRIMED] = true;
 
-    if (cache[PRIMED]) throw new Error('Cannot prime twice');
-    cache[PRIMED] = true;
-
-    const results = await recursiveLoadDir(cache[DISK_DIR]);
+    let results;
+    try {
+      results = await recursiveLoadDir(this[DISK_DIR]);
+    }
+    catch (error) {
+      if (error.code === 'ENOENT') throw new Error('Directory does not exist: ' + this[DISK_DIR]);
+      else throw error;
+    }
 
     return Promise.map(
       Object.keys(results),
