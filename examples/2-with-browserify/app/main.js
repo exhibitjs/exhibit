@@ -1,3 +1,3 @@
 import foo from './foo';
 
-foo('ES6');
+foo();

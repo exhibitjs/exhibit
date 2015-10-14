@@ -15,7 +15,6 @@ const ORIGIN_DIR = Symbol();
 const CONTROLLER = Symbol();
 const CWD = Symbol();
 
-
 export default class BatchRunner extends EventEmitter {
   constructor({cwd, originDir, importers, builders, controller, dest, verbose}) {
     super();
@@ -46,7 +45,7 @@ export default class BatchRunner extends EventEmitter {
   async run({files, autoReport = true, deferrable = true}) {
     let reporter, writtenChanges;
 
-    if (!files.every(file => isAbsolute(file.path))) {
+    if (!files.every(file => isAbsolute(file.file))) {
       console.error('files passed to Batch#run():', files);
       throw new Error('Files passed to Batch#run() must have absolute paths');
     }
@@ -61,7 +60,7 @@ export default class BatchRunner extends EventEmitter {
 
       files.forEach(file => {
         // in case two changes to the same file occur in quick succession, keep only the latest one
-        filter(this[DEFERRED], t => t.path !== file.path);
+        filter(this[DEFERRED], t => t.file !== file.file);
         this[DEFERRED].push(file);
       });
 
@@ -72,7 +71,7 @@ export default class BatchRunner extends EventEmitter {
 
     if (autoReport) {
       reporter = this[CONTROLLER].startReport(
-        files.map(file => relative(this[CWD], file.path)).join(', ')
+        files.map(file => relative(this[CWD], file.file)).join(', ')
       );
     }
 
@@ -81,7 +80,7 @@ export default class BatchRunner extends EventEmitter {
     const changes = await this[ENGINE].batch(files);
 
     console.assert(
-      changes.every(change => isAbsolute(change.path)),
+      changes.every(change => isAbsolute(change.file)),
       'Expected all changes from Engine#batch() to have absolute paths'
     );
 
@@ -90,7 +89,7 @@ export default class BatchRunner extends EventEmitter {
       writtenChanges = await Promise.map(changes, change => {
         if (change) {
           return this[DEST].write(
-            relative(this[ORIGIN_DIR], change.path),
+            relative(this[ORIGIN_DIR], change.file),
             change.contents
           );
         }
@@ -103,7 +102,7 @@ export default class BatchRunner extends EventEmitter {
     // convert them to absolute paths
     // (as these ones came from dest, they have relative paths)
     for (const change of writtenChanges) {
-      change.path = resolvePath(this[ORIGIN_DIR], change.path);
+      change.file = resolvePath(this[ORIGIN_DIR], change.file);
     }
 
     // finish the report
@@ -137,7 +136,7 @@ export default class BatchRunner extends EventEmitter {
     }
 
     console.assert(
-      writtenChanges.every(change => isAbsolute(change.path)),
+      writtenChanges.every(change => isAbsolute(change.file)),
       'writtenChanges should all have absolute paths here'
     );
 

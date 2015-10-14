@@ -1,16 +1,20 @@
-# `.build()`
+# .build()
 
 **Starts the build.**
 
+This is the workhorse method that builds your files, from one directory to another (and optionally keeps rebuilding them indefinitely).
+
 ---
 
-**Signature: `.build(string: destination, object: options)`**
+**Signature: `.build(string: origin, string: destination, [object: options])`**
+
+Example:
 
 ```js
-exhibit('src')
+exhibit()
   .use('babel')
   .use('sass')
-  .build('dist', {
+  .build('app', 'dist', {
     watch: true,
     serve: true,
     browserSync: true
@@ -19,28 +23,35 @@ exhibit('src')
   });
 ```
 
+The `origin` and `destination` arguments are directories, and will be resolved from the current working directory using Node's path.resolve().
+
+When you call `.build()`, Exhibit loads all the contents of both the origin and destination directories recursively into memory. It then puts all the origin files through the sequence of builders (which was set up with a series `.use()` calls) until everything has been written into the final cache, possibly changing what was loaded from disk. Any changes are then persisted to disk. If you use `watch`, it will keep running and perform incremental rebuilds over time.
+
+
 ## Return value
 
-The `.build()` method always returns a promise, which resolves when the first batch of changes (or the only batch, if you're not using `watch`) has been persisted to the destination.
+The `.build()` method always returns a promise, which resolves when the first batch of files (or the only batch, if you're not using `watch`) has been written to the destination.
 
-The resolution value is an array of objects detailing the changes that occurred in the destination directory.
+The resolution value is an array of objects detailing the changes that occurred in the destination directory due to the first batch.
+
+Note that using any combination of `watch`, `serve` and `browserSync` will keep the process running even after the initial build promise has resolved – the resolution only means the initial batch of files has been written out to disk, i.e. that the destination directory is now 'in sync' with the origin.
 
 
 ## Options
 
-All options are optional.
+The default options will simply build your app and then stop.
 
 
-### `watch`
+##### `watch`
 
 **Default: `false`**
 
-When enabled, Exhibit will watch everything in the source directory for changes.
+When enabled, Exhibit will watch everything in the origin directory for changes.
 
 Note that the promise returned from `.build()` will still resolve after the *first* batch of files has been written. ~~If you want to be notified of further changes, you'll need to use events~~ *not yet implemented*.
 
 
-### `serve`
+##### `serve`
 
 **Default: `false`**
 
@@ -49,7 +60,7 @@ Enables a very simple static file server (using [Connect](http://www.senchalabs.
 An available port will be found automatically.
 
 
-### `browserSync`
+##### `browserSync`
 
 **Default: `false`**
 
@@ -63,16 +74,14 @@ What this actually does:
 Obviously, it only makes sense to use this in development.
 
 
-### `open`
+##### `open`
 
 **Default: `false`**
 
-Uses [opn](https://github.com/sindresorhus/opn) to open localhost in your default browser.
-
-Only works in conjunction with `serve`.
+Uses [opn](https://github.com/sindresorhus/opn) to open localhost in your default browser on the appropriate port. (Only works in conjunction with `serve`.)
 
 
-### `verbose`
+##### `verbose`
 
 **Default: `false`**
 
@@ -83,11 +92,11 @@ Prints out a **lot** of extra debugging information.
 
 ## Alternative defaults
 
-By passing a boolean `true` as the second argument, you can switch to an alternative set of defaults. It's a convenient shortcut for some situations.
+By passing a boolean `true` as the third argument, you can switch to an alternative set of defaults.
 
-The difference is that `watch`, `serve`, `browserSync` and `true` are all enabled – a good set of defaults for developing a static site or single-page app.
+It's a convenient shortcut for enabling these four options at once: `watch`, `serve`, `browserSync` and `open`.
 
-**Signature: `.build(string: destination, boolean: useOtherDefaults, object: options)`**
+**Signature: `.build(string: origin, string: destination, boolean: useAltDefaults, [object: options])`**
 
 
 ```js

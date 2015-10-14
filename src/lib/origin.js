@@ -1,9 +1,9 @@
-import {basename, resolve as resolvePath, isAbsolute} from 'path';
 import assign from 'lodash/object/assign';
 import {readFile} from 'sander';
 import Promise from 'bluebird';
 import Cache from './cache';
 import sane from 'sane';
+import path from 'path';
 
 const WATCHER = Symbol();
 const DISK_DIR = Symbol();
@@ -36,31 +36,31 @@ export default class Origin extends Cache {
 
     // listen to all event types
     ['change', 'add', 'delete'].forEach(type => {
-      this[WATCHER].on(type, (path, root, stat) => {
-        if (basename(path) === '.DS_Store') return;
+      this[WATCHER].on(type, (file, root, stat) => {
+        if (path.basename(file) === '.DS_Store') return;
 
-        console.assert(!isAbsolute(path));
+        console.assert(!path.isAbsolute(file));
 
         if (!stat) {
           // the file on disk has been deleted.
           console.assert(type === 'delete', `unexpected type: ${type}`);
-          this.writeWithoutPersisting(path, null);
+          this.writeWithoutPersisting(file, null);
         }
 
         else if (stat.isFile()) {
           // the file on disk has been modified or created.
           console.assert(type === 'change' || type === 'add', `unexpected type: ${type}`);
 
-          const absPath = resolvePath(this[DISK_DIR], path);
+          const absPath = path.resolve(this[DISK_DIR], file);
 
           readFile(absPath).then(contents => {
-            this.writeWithoutPersisting(path, contents);
+            this.writeWithoutPersisting(file, contents);
           }).catch(error => {
-            if (error.code === 'ENOENT') this.writeWithoutPersisting(path, null);
+            if (error.code === 'ENOENT') this.writeWithoutPersisting(file, null);
             else {
               // we could not read the file because of permissions or some other issue.
               // since we're in limbo here, we can only print the error
-              console.error(`\nFailed to read file after change: ${path}\n${error.stack}\n`);
+              console.error(`\nFailed to read file after change: ${file}\n${error.stack}\n`);
             }
           });
         }

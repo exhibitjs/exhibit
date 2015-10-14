@@ -1,54 +1,82 @@
-# `.use()`
+# .use()
 
-**Adds a new builder to the chain.**
+**Adds a new builder to the sequence.**
 
-It can be called in two ways.
-
-## Passing a function
-
-**Signature: `.use(fn: builder)`**
-
-Here's a custom builder function that adds a comment to all CSS files:
-
-```js
-var exhibit = require('exhibit');
-
-exhibit('src')
-  .use(function (path, contents) {
-    if (path.endsWith('.css')) {
-      return '/* Copyright 2015 AwesomeCorp */\n' + content;
-    }
-    return contents;
-  })
-  .build('dist');
-```
-
-Or you might get your function from an external module:
-
-```js
-var exhibit = require('exhibit');
-var babel = require('exhibit-builder-babel');
-
-exhibit('src')
-  .use(babel({stage: 1}))
-  .build('dist');
-```
+This method has three possible signatures.
 
 
-## Auto-loading plugins
+### 1. Auto-load a plugin module
 
 **Signature: `.use(string: pluginName, [...args])`**
 
-Automatically requires the appropriate plugin for you:
+Automatically imports the appropriate builder plugin for you, and calls it (along with any extra arguments you provide) to retrieve a configured builder function:
 
 ```js
-var exhibit = require('exhibit');
-
-exhibit('src')
+exhibit()
   .use('babel', {stage: 1})
-  .build('dist');
+  .build('src', 'dist');
 ```
 
-The above is a shortcut for:
+> Understand: the above snippet is really just a shortcut for this:
+> 
+> ```js
+> exhibit()
+>   .use( require('exhibit-builder-babel')({stage: 1}) )
+>   .build('src', 'dist');
+> ```
 
-`.use(require('exhibit-builder-babel')({stage: 1}))`
+
+### 2. Use a custom builder function
+
+**Signature: `.use(fn: builder)`**
+
+A builder is just a function (even when it comes from a plugin).
+
+Here's a custom, inline builder that prepends a comment to all CSS files:
+
+```js
+exhibit()
+  .use(function ({ext, contents}) {
+    if (ext === '.css') {
+      contents = '/* Copyright 2015 AwesomeCorp */\n' + contents;
+    }
+
+    return contents;
+  })
+  .build('src', 'dist');
+```
+
+See [writing a builder](../writing-a-builder.md) for more details.
+
+
+### 3. Use another Exhibit app
+
+**Signature: `.use(Exhibit: app)`**
+
+Sequences are infinitely composable: you can pass another Exhibit app to `.use()`.
+
+
+```js
+// a basic sequence to build your code to HTML/CSS/JS
+var app = exhibit()
+  .use('jade')
+  .use('sass')
+  .use('autoprefixer')
+  .use('babel')
+  .use('browserify');
+
+// a production sequence that expands on the above with some extra steps
+var prod = exhibit()
+  .use('eslint', {fail: true})
+  .use(app)
+  .use('concat')
+  .use('uglify')
+  .use('clean-css');
+
+if (doProdBuild) {
+  prod.build('src', 'dist');
+}
+else {
+  app.build('src', 'tmp');
+}
+```

@@ -1,22 +1,20 @@
 var exhibit = require('exhibit');
 
-exhibit('app')
-
+var app = exhibit()
   .use('babel')
-
-  .use(function addCopyright(path, contents) {
-    // add a comment if it's a JS or CSS file
-    if (path.endsWith('.js') || path.endsWith('.css')) {
-      return '/* Copyright 2015 AwesomeCorp */\n' + contents;
+  .use(function addCopyright(job) {
+    // add a comment if it's a JS file
+    if (job.ext === '.js') {
+      return '/* Copyright 2015 AwesomeCorp */\n' + job.contents;
     }
 
-    // all other filetypes just pass straight through
-    return contents;
-  })
-
-  .build('dist', {
-    watch: true,
-    serve: true,
-    open: true,
-    browserSync: true
+    // all other filetypes: just pass the contents through, unmodified
+    return job.contents;
   });
+
+app.build('app', 'dist', {
+  watch: true,
+  serve: true,
+  open: true,
+  browserSync: true
+});

@@ -1,22 +1,19 @@
 import {param, promises, Optional, ArrayOf} from 'decorate-this';
 import {Change} from 'exhibit-core';
-import {isAbsolute} from 'path';
+import path from 'path';
 import {filter} from 'in-place';
 import Promise from 'bluebird';
 import Cache from './cache';
-
 
 export default class Destination extends Cache {
   constructor(diskDir) {
     super(diskDir);
   }
 
-
   /**
    * Overrides prime just so we can also make a note of which dirs already exist.
    */
   @promises(ArrayOf(Change))
-
   async prime() {
     return super.prime().then(initialChanges => {
       // initialChanges.forEach(change => {
@@ -27,24 +24,22 @@ export default class Destination extends Cache {
     });
   }
 
-
   /**
    * Deletes (from disk) all files except those specified.
    */
   @param(Optional(ArrayOf(String)))
   @promises(ArrayOf(Change))
+  purgeAllExcept(exceptFiles) {
+    console.assert(exceptFiles.every(file => !path.isAbsolute(file)));
 
-  purgeAllExcept(exceptPaths) {
-    console.assert(exceptPaths.every(path => !isAbsolute(path)));
+    const files = this.getAllPaths();
+    // console.log('all paths', files);
 
-    const paths = this.getAllPaths();
-    // console.log('all paths', paths);
+    if (exceptFiles) filter(files, file => exceptFiles.indexOf(file) === -1);
 
-    if (exceptPaths) filter(paths, path => exceptPaths.indexOf(path) === -1);
+    // console.log('exceptFiles (initial writes)', exceptFiles);
+    // console.log('remaining paths', files);
 
-    // console.log('exceptPaths (initial writes)', exceptPaths);
-    // console.log('remaining paths', paths);
-
-    return Promise.map(paths, path => this.write(path, null));
+    return Promise.map(files, file => this.write(file, null));
   }
 }
