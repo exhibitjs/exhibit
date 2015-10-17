@@ -1,31 +1,36 @@
-# Demo with Exhibit and Browserify
+# Demo: Exhibit with Browserify
 
-The enclosed [watch.js](./watch.js) file shows how to bundle scripts with Browserify.
+1. `cd` into this directory
+2. `npm install`
+3. `node watch.js`
 
-Builders used:
+The site will open in your browser. Try editing files within `app`, and your changes should be reflected in your browser immediately. Notice that any console logs go right back to the original source files, thanks to source maps.
 
-- [babel](https://github.com/exhibitjs/exhibit-builder-babel)
-- [coffee](https://github.com/exhibitjs/exhibit-builder-coffee)
-- [browserify](https://github.com/exhibitjs/exhibit-builder-browserify)
+#### watch.js
 
-The use of Babel and CoffeeScript is to demonstrate the best way to preprocess things when using Exhibit. You don't need to use Browserify transforms – you can get better rebuild performance by transforming everything to ES5 JavaScript *before* bundling it with Browserify.
+To illustrate how Exhibit build sequences work, this demo uses a couple of preprocessing steps before Browserify.
 
-In this case the chain looks like this:
+```js
+var exhibit = require('exhibit');
 
-> babel => coffee => browserify => (output)
+exhibit()
+  .use('babel')
+  .use('coffee')
+  .use('browserify', 'main.js')
+  .build('app', 'dist', {
+    watch: true,
+    serve: true,
+    browserSync: true,
+    open: true
+  });
+```
 
-## Why in that order?
+Explanation of sequence:
 
-We know the output from CoffeeScript is already ES5, so there's no need to put that through Babel (it wouldn't hurt, but it's a waste). Hence we do Babel first, then CoffeeScript. (Babel will simply ignore the `.coffee` file, along with other irrelevant types like `.html` and `.css`.)
+1. The [babel](https://github.com/exhibitjs/exhibit-builder-babel) plugin converts all `.js` files (which may be written in ES6) to ES5 JavaScript.
+    - This converts any ES6 `import` statements to `require()` calls.
 
-Browserify expects normal ES5 JavaScript, so it has to go last.
+2. Next, the [coffee](https://github.com/exhibitjs/exhibit-builder-coffee) plugin converts any `.coffee` files to ES5 JavaScript, too.
 
-## Try it out
-
-1. `cd` into this directory.
-2. Run `npm install`.
-3. Run `node watch.js`
-
-The built-in web server should start automatically and open in your browser (because the `serve` and `open` options are enabled).
-
-Now try editing files in the `./app` directory – changes should be reflected in your browser immediately.
+3. Finally, the [browserify](https://github.com/exhibitjs/exhibit-builder-browserify) plugin looks for any `require()` calls in `main.js`, and bundles them into the file.
+    - We’ve specified `main.js` as an entry, but the plugin has [more options](https://github.com/exhibitjs/exhibit-builder-browserify#options) this.
