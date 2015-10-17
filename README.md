@@ -35,7 +35,7 @@ But unlike Express, it's not for running on a production server – it's for pro
 
 It pushes everything from one directory to another via your chosen build steps (e.g.&nbsp;`src/main.scss`&nbsp;→&nbsp;`public/main.css`).
 
-**So it's like gulp?** Not really – it has no CLI, and it's not a task runner. It's just a fast little API for managing a series of changes to a bunch of files. You can use Exhibit [*with* gulp](using with gulp), or with another task runner ...or with good old `$ node`.
+**So it's like gulp?** Not really – it has no CLI, and it's not a task runner. It's just a fast little API for managing a series of changes to a bunch of files. You can use Exhibit [*with* gulp][using with gulp], or with another task runner ...or with good old `$ node`.
 
 
 #### Real-time, incremental rebuilding
