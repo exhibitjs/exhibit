@@ -6,11 +6,11 @@ A builder is just a function. It's what's passed to `.use()`.
 
 It deals with **one file at a time** (although it may import other files as part of this process) and returns whatever it wants to output to the next build step (or to the destination directory, if it's the last builder).
 
-#### A note on complexity
+#### How hard is it?
 
 Writing a builder is very simple for a 1→1 compilation step such as CoffeeScript or Autoprefixer (one input file → one output file).
 
-It gets more complicated for *n*→1 or *n*→*n* compilations – i.e. anything that needs to import/include/require supporting files, such as Sass, Jade, Browserify, etc. They must be configured to use the import [methods](#methods) for their I/O. This can take a bit of effort, but it's what makes Exhibit fast, and it makes its *end user* API very simple.
+It gets more complicated for *n*→1 or *n*→*n* compilations – i.e. anything that needs to import/include/require supporting files, such as Sass, Jade, Browserify, etc. These kind of tools must be configured to use Exhibit's import [methods](#methods) instead of disk I/O. Wiring them up properly can take a bit of effort, but it's what makes Exhibit’s language-agnostic incremental rebuilding possible.
 
 
 ## Simple example
@@ -29,7 +29,7 @@ Adding a copyright banner to the top of all CSS files:
   })
 ```
 
-The job object is expained [below](#the-job).
+> The `job` object is expained [below](#the-job).
 
 
 ## What should you return?

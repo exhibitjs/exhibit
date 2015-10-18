@@ -1,8 +1,8 @@
 # Using Exhibit with gulp
 
-Exhibit is not related to gulp, and in fact it replaces a lot of the functionality that you'd normally use gulp plugins for.
+Exhibit is not related to gulp, but they work well together.
 
-But if you like gulp's command line interface, you might want to use Exhibit in a gulpfile.
+Exhibit doesn't have to be used with a task runner. But if you're already set up with gulp, you might want to try using Exhibit in your gulpfile.
 
 The return value from Exhibit's `.build()` is a promise, and gulp loves promises:
 
@@ -20,7 +20,9 @@ gulp.src('build', function () {
 })
 ```
 
+> gulp will wait for the build promise to resolve (i.e. for all files to be written to the destination) before it deems the task 'complete'.
+
 
 ## Example
 
-Exhibit's [Web Starter Kit fork](https://github.com/exhibitjs/exhibit-wsk) has gulp tasks (`$ gulp`, `$ gulp serve`), and these tasks use Exhibit for all the actual building, making it significantly faster and lighter than Google's original.
+Exhibit's [Web Starter Kit fork](https://github.com/exhibitjs/exhibit-wsk) is a good example of using Exhibit in a gulpfile.

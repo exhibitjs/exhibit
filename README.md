@@ -23,7 +23,7 @@ var exhibit = require('exhibit');
 var app = exhibit()
   .use('sass')
   .use('autoprefixer')
-  .use('babel', {skip: 'vendor/**/*'})
+  .use('babel', {stage: 1, skip: 'scripts/vendor/**'})
   .use('concat')
   .use(customFunc);
 
@@ -36,7 +36,6 @@ But unlike Express, it's not for running on a production server – it's for pro
 It pushes everything from one directory to another via your chosen build steps (e.g.&nbsp;`src/main.scss`&nbsp;→&nbsp;`public/main.css`).
 
 **So it's like gulp?** Not really – it has no CLI, and it's not a task runner. It's just a fast little API for managing a series of changes to a bunch of files. You can use Exhibit [*with* gulp][using with gulp], or with another task runner ...or with good old `$ node`.
-
 
 #### Real-time, incremental rebuilding
 
@@ -55,43 +54,43 @@ Thanks to memory caching and work-avoidance, rebuilding usually happens in the b
 
 There's a bundled development server, if you need it. And with one line you can wire it up with BrowserSync, for automatic browser refreshes after every change – check out the [options].
 
+
 ---
+
 
 ## Plugins
 
-Builder plugins are simply npm modules named `exhibit-builder-*`.
+> Builder plugins are npm modules named `exhibit-builder-*`.
+>
+> NB. `use('sass')` is a shortcut for `use(require('exhibit-builder-sass')())`
 
-> NB. `use('foo')` is a shortcut for `use(require('exhibit-builder-foo')())`
-
+- [autoprefixer](https://github.com/exhibitjs/builder-autoprefixer)
 - [babel](https://github.com/exhibitjs/builder-babel)
 - [browserify](https://github.com/exhibitjs/builder-browserify)
-- [sass](https://github.com/exhibitjs/builder-sass)
-- [autoprefixer](https://github.com/exhibitjs/builder-autoprefixer)
-- ~~[jade](https://github.com/exhibitjs/builder-jade)~~
+- [clean-css](https://github.com/exhibitjs/builder-clean-css)
 - [concat](https://github.com/exhibitjs/builder-concat)
-- ~~[minify-html](https://github.com/exhibitjs/builder-minify-html)~~
-- ~~[clean-css](https://github.com/exhibitjs/builder-clean-css)~~
-- [uglify](https://github.com/exhibitjs/builder-uglify)
 - [imagemin](https://github.com/exhibitjs/builder-imagemin)
-- [include-assets](https://github.com/exhibitjs/builder-include-assets)
-- ~~[rev](https://github.com/exhibitjs/builder-rev)~~
+- [minify-html](https://github.com/exhibitjs/builder-minify-html)
+- [sass](https://github.com/exhibitjs/builder-sass)
 - [sw-precache](https://github.com/exhibitjs/builder-sw-precache)
-- ~~[rollup](https://github.com/exhibitjs/builder-rollup)~~
+- [uglify](https://github.com/exhibitjs/builder-uglify)
 
-*Struck-out plugins are in development.*
+More on the way soon: jade, rev, rollup, eslint.
 
 Want something else? [Request a plugin][issues] (or even [publish one][publishing guidelines]).
 
 
-> #### Handwritten builders
-> 
-> Plugins are just a convenience – you can also [write a builder inline][writing a builder]:
-> 
-> ```js
->   .use(function () {...})
-> ```
+#### Handwritten builders
+
+Plugins are just a convenience – you can also [write a builder inline][writing a builder]:
+
+```js
+  .use(function () {...})
+```
+
 
 ---
+
 
 ## Quick start
 
@@ -103,22 +102,22 @@ This is a fork of Google's excellent Web Starter Kit, adapted to use Exhibit.
 
 Like the [original](https://github.com/google/web-starter-kit), it still uses gulp as a CLI for running tasks (`gulp serve` and `gulp build`). But the gulpfile is half the size and the build is much faster.
 
-###### ~~[Exhibit electron app starter kit](https://github.com/exhibitjs/exhibit-electron-starter-kit)~~
+###### ~~Exhibit electron app starter kit~~
 
 > *In development*
 
-###### ~~[Yeoman webapp generator](https://github.com/exhibitjs/generator-exhibit-webapp)~~
+###### ~~Yeoman webapp generator~~
 
 > *In development*
 
 <!-- 
  -->
 
-
+<!-- 
 #### Manual setup
 
 Follow the 5 minute [tutorial].
-
+ -->
 ---
 
 ## Contributing

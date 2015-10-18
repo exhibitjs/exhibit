@@ -1,12 +1,12 @@
-# .build()
-
-**Starts the build.**
-
-This is the workhorse method that builds your files, from one directory to another (and optionally keeps rebuilding them indefinitely).
+[exhibit()](exhibit.md) &nbsp;|&nbsp; [.use()](use.md) &nbsp;|&nbsp; .build()
 
 ---
 
-**Signature: `.build(string: origin, string: destination, [object: options])`**
+# .build()
+
+> .build( string: **origin**, string: **destination**, [ object: **options** ] )
+
+The workhorse method that builds your files from one directory to another (and optionally keeps rebuilding them indefinitely).
 
 Example:
 
@@ -23,9 +23,9 @@ exhibit()
   });
 ```
 
-The `origin` and `destination` arguments are directories, and will be resolved from the current working directory using Node's path.resolve().
+The `origin` and `destination` arguments are directories (relative to your CWD).
 
-When you call `.build()`, Exhibit loads all the contents of both the origin and destination directories recursively into memory. It then puts all the origin files through the sequence of builders (which was set up with a series `.use()` calls) until everything has been written into the final cache, possibly changing what was loaded from disk. Any changes are then persisted to disk. If you use `watch`, it will keep running and perform incremental rebuilds over time.
+**What it does:** When you call `.build()`, Exhibit loads all the contents of both the origin and destination directories recursively into memory. It then puts all the origin files through the sequence of builders (which was set up with a series `.use()` calls) until everything has been written into the final cache, possibly changing what was loaded from disk. Any changes are then persisted to disk. If you use `watch`, it will keep running and perform incremental rebuilds over time.
 
 
 ## Return value
@@ -92,11 +92,11 @@ Prints out a **lot** of extra debugging information.
 
 ## Alternative defaults
 
+> .build( string: **origin**, string: **destination**, boolean: **useAltDefaults**, [ object: **options** ] )
+
 By passing a boolean `true` as the third argument, you can switch to an alternative set of defaults.
 
 It's a convenient shortcut for enabling these four options at once: `watch`, `serve`, `browserSync` and `open`.
-
-**Signature: `.build(string: origin, string: destination, boolean: useAltDefaults, [object: options])`**
 
 
 ```js

@@ -1,13 +1,16 @@
+[exhibit()](exhibit.md) &nbsp;|&nbsp; .use() &nbsp;|&nbsp; [.build()](build.md)
+
+---
+
 # .use()
 
-**Adds a new builder to the sequence.**
+Adds a new builder to the sequence.
 
-This method has three possible signatures.
+There are three ways to call it.
 
+### With a plugin name
 
-### 1. Auto-load a plugin module
-
-**Signature: `.use(string: pluginName, [...args])`**
+> .use( string: **pluginName**, string: [ **...args** ] )
 
 Automatically imports the appropriate builder plugin for you, and calls it (along with any extra arguments you provide) to retrieve a configured builder function:
 
@@ -17,22 +20,23 @@ exhibit()
   .build('src', 'dist');
 ```
 
-> Understand: the above snippet is really just a shortcut for this:
+<br>
+
+> **Understand:** calling `.use('babel', {stage: 1})` is really just a shortcut for this:
 > 
 > ```js
-> exhibit()
 >   .use( require('exhibit-builder-babel')({stage: 1}) )
->   .build('src', 'dist');
 > ```
 
+---
 
-### 2. Use a custom builder function
+### With a custom builder function
 
-**Signature: `.use(fn: builder)`**
+> .use( function: **builder** )
 
 A builder is just a function (even when it comes from a plugin).
 
-Here's a custom, inline builder that prepends a comment to all CSS files:
+Here's a custom builder that prepends a comment to all CSS files:
 
 ```js
 exhibit()
@@ -46,18 +50,19 @@ exhibit()
   .build('src', 'dist');
 ```
 
-See [writing a builder](../writing-a-builder.md) for more details.
+Builder functions can access several API methods and data. See [writing a builder](../writing-a-builder.md) for more details.
 
+---
 
-### 3. Use another Exhibit app
+### With another Exhibit instance
 
-**Signature: `.use(Exhibit: app)`**
+> .use( Exhibit: **exhibit** )
 
-Sequences are infinitely composable: you can pass another Exhibit app to `.use()`.
+Sequences are infinitely composable.
 
 
 ```js
-// a basic sequence to build your code to HTML/CSS/JS
+// basic sequence: steps to build your code to HTML/CSS/JS
 var app = exhibit()
   .use('jade')
   .use('sass')
@@ -65,7 +70,7 @@ var app = exhibit()
   .use('babel')
   .use('browserify');
 
-// a production sequence that expands on the above with some extra steps
+// production sequence: wraps it with extra steps
 var prod = exhibit()
   .use('eslint', {fail: true})
   .use(app)
@@ -77,6 +82,6 @@ if (doProdBuild) {
   prod.build('src', 'dist');
 }
 else {
-  app.build('src', 'tmp');
+  app.build('src', 'dist-dev');
 }
 ```
