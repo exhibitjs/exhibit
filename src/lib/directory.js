@@ -1,15 +1,21 @@
+import connect from 'connect';
 import diff from './diff';
+import errorhandler from 'errorhandler';
+import http from 'http';
 import Immutable from 'immutable';
 import matcher from './matcher';
 import normalize from './normalize';
 import parseFilesize from 'filesize-parser';
 import path from 'path';
 import prettyBytes from 'pretty-bytes';
-import Promise from 'bluebird';
+import Promise, { promisify } from 'bluebird';
 import sander from 'sander';
 import sane from 'sane';
+import serveIndex from 'serve-index';
+import serveStatic from 'serve-static';
 import subdir from 'subdir';
 import { debounce } from 'lodash';
+import { getPorts } from 'portscanner-plus';
 
 /**
  * Recursively soft-removes empty directories. If a directory isn't empty, it
@@ -304,6 +310,26 @@ queueableMethods = {
         resolve();
       });
     });
+  },
+
+  /**
+   * Starts a simple dev server.
+   */
+  async serve() {
+    const dir = this;
+
+    const [serverPort] = await getPorts(1, 8000, 9000);
+
+    const app = connect();
+    app.use(serveStatic(dir._absolutePath));
+    app.use(errorhandler());
+    app.use(serveIndex(dir._absolutePath, { icons: true, hidden: true, view: 'details' }));
+
+    const server = http.createServer(app);
+
+    await promisify(server.listen.bind(server))(serverPort);
+
+    console.log(`Serving ${path.relative(process.cwd(), dir._absolutePath)} at http://localhost:${serverPort}/`);
   },
 };
 
