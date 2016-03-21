@@ -1,6 +1,0 @@
-{
-  "devDependencies": {
-    "exhibit": "*",
-    "exhibit-builder-babel": "*"
-  }
-}
