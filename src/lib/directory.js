@@ -42,7 +42,7 @@ async function reprime(dir) {
 
   // define resursive function to load directory contents
   let totalSize = 0;
-  const load = dirName => Promise.each(sander.readdir(dirName), async _name => {
+  const load = dirName => Promise.map(sander.readdir(dirName), async _name => {
     const name = path.resolve(dirName, _name);
     const relativeName = path.relative(dir._absolutePath, name);
 
@@ -224,7 +224,7 @@ queueableMethods = {
     const deletions = new Set();
 
     // go through all patch paths in parallel
-    await Promise.each(patch.keys(), async name => {
+    await Promise.map(patch.keys(), async name => {
       const contents = patch.get(name);
 
       if (contents === null) {
