@@ -6,7 +6,7 @@ Toolkit for rolling your own watch-driven, incremental build setup.
 
 Provides tools for efficiently reading, writing, and watching directories. Exploits [immutable data structures](https://facebook.github.io/immutable-js/docs) to make complex build logic much easier to reason about.
 
-<!-- [![NPM version][npm-image]][npm-url]  -->[![Linux Build Status][travis-image]][travis-url] [![Windows Build Status][appveyor-image]][appveyor-url] [![Dependency Status][depstat-image]][depstat-url]
+[![NPM version][npm-image]][npm-url] [![Linux Build Status][travis-image]][travis-url] [![Windows Build Status][appveyor-image]][appveyor-url] [![Dependency Status][depstat-image]][depstat-url]
 
 ## License
 
