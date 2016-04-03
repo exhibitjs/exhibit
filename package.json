@@ -1,7 +1,7 @@
 {
   "name": "exhibit",
   "description": "Incremental build toolkit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "ava": {
     "babel": false,
     "files": "dist/test/**/*.test.js",
