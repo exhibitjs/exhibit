@@ -190,7 +190,7 @@ export class Directory {
 
 // later, the following methods will be moved into the class definition and decorated
 // with `@queuable`, but for now Babel v6 doesn't support decorators
-queueableMethods = {
+queueableMethods = { // eslint-disable-line prefer-const
 
   /**
    * Reads the contents of the directory, recursively, but cached.
