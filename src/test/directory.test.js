@@ -47,7 +47,7 @@ test.serial('reading files from disk', async t => {
 
   t.same(files.toJS(), {
     'file.txt': new Buffer('hello\n'),
-    'bar/another.css': new Buffer('goodbye\n'),
+    [path.join('bar', 'another.css')]: new Buffer('goodbye\n'),
   });
 });
 
@@ -59,7 +59,7 @@ test.serial('filtering out files that don\'t match', async t => {
   const files = await foo.read();
 
   t.same(files.toJS(), {
-    'bar/another.css': new Buffer('goodbye\n'),
+    [path.join('bar', 'another.css')]: new Buffer('goodbye\n'),
   });
 });
 
@@ -71,12 +71,12 @@ test.serial('write() files to disk and read() them back', async t => {
 
   const writtenBar = await bar.write({
     'some-file.css': 'aside {background: squirple;}',
-    'another/file.css': 'figure {color: glue}',
+    [path.join('another', 'file.css')]: 'figure {color: glue}',
   });
 
   t.is(writtenBar.size, 2);
   t.is(writtenBar.get('some-file.css').toString(), 'aside {background: squirple;}');
-  t.is(writtenBar.get('another/file.css').toString(), 'figure {color: glue}');
+  t.is(writtenBar.get(path.join('another', 'file.css')).toString(), 'figure {color: glue}');
 
   // read back
   const bar2 = directory(tmpBarPath);
