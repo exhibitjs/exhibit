@@ -31,7 +31,7 @@ async function pruneEmptyAncestors(file, until) {
     await sander.rmdir(file);
   }
   catch (error) {
-    if (error.code === 'ENOTEMPTY') return;
+    if (error.code === 'ENOTEMPTY' || error.code === 'ENOENT') return;
     throw error;
   }
 
