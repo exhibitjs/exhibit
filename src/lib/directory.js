@@ -306,7 +306,9 @@ queueableMethods = {
     return new Promise((resolve, reject) => {
       watcher.on('error', reject);
 
-      watcher.on('ready', () => {
+      watcher.on('ready', async () => {
+        await reprime(dir);
+        notify();
         resolve();
       });
     });
