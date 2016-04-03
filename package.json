@@ -54,6 +54,9 @@
   "engines": {
     "node": ">=4"
   },
+  "files": [
+    "dist/lib"
+  ],
   "main": "dist/lib/index.js",
   "repository": "exhibitjs/exhibit",
   "scripts": {
