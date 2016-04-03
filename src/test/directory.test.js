@@ -22,13 +22,14 @@ test.serial('watch()', async t => {
   await bar.write(await foo.read());
 
   const subscriber = sinon.spy();
-
   await bar.watch(subscriber);
 
+  await delay(200);
+  t.is(subscriber.callCount, 1);
+
+  subscriber.reset();
   await sander.writeFile(tmpBarPath, 'will-this-fire.txt', 'hello');
-
-  await delay(500);
-
+  await delay(200);
   t.is(subscriber.callCount, 1);
 
   const result = subscriber.getCall(0).args[0];
