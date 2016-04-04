@@ -3,9 +3,9 @@
 import LazyBuilder from 'lazy-builder';
 
 export default function cache(fn) {
-  return new LazyBuilder(function (name, contents) {
+  return new LazyBuilder(function (name, content) {
     const include = this.importFile;
 
-    return fn(contents, name, include);
+    return fn(content, name, include);
   }).build;
 }

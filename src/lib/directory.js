@@ -150,7 +150,7 @@ export class Directory {
     // settings
     dir._absolutePath = path.resolve(name);
     dir._match = matcher(options.match);
-    dir._limit = Number(parseFilesize(options.limit)); // https://github.com/patrickkettner/filesize-parser/pull/10
+    dir._limit = parseFilesize(options.limit);
     dir._log = Boolean(options.log);
     dir._logPrelude = grey(path.relative(process.cwd(), dir._absolutePath)) + path.sep;
 
