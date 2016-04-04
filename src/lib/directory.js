@@ -18,11 +18,6 @@ import _ from 'lodash';
 import { getPorts } from 'portscanner-plus';
 import { grey } from 'chalk';
 
-/**
- * Recursively soft-removes empty directories. If a directory isn't empty, it
- * quietly gives up (this happens, eg, when a directory still contains some file
- * that the matcher excludes).
- */
 async function pruneEmptyAncestors(file, until) {
   if (until === file || !subdir(until, file)) return;
 
@@ -32,6 +27,7 @@ async function pruneEmptyAncestors(file, until) {
     await sander.rmdir(file);
   }
   catch (error) {
+    // for non-empty or missing directories, quietly finish
     if (error.code === 'ENOTEMPTY' || error.code === 'ENOENT') return;
     throw error;
   }
@@ -219,7 +215,7 @@ queueableMethods = { // eslint-disable-line prefer-const
 
 
   /**
-   * Writes the given filemap to disk.
+   * Writes a filemap to disk.
    */
 
   async write(incomingFiles) {
@@ -293,6 +289,7 @@ queueableMethods = { // eslint-disable-line prefer-const
     await reprime(dir);
 
     const notify = _.debounce(() => {
+      // TODO: debounce again, queueing up changes
       subscriber(dir._files);
     }, 10);
 
@@ -300,24 +297,14 @@ queueableMethods = { // eslint-disable-line prefer-const
       if (!dir._match(name)) return;
 
       if (!stat) {
-        if (dir._log) {
-          console.log(
-            'delete',
-            path.relative(process.cwd(), path.resolve(dir._absolutePath, name))
-          );
-        }
+        if (dir._log) console.log('delete', dir._logPrelude + name);
 
         dir._files = dir._files.delete(name);
         dir._mtimes = dir._mtimes.delete(name);
         notify();
       }
       else if (stat.isFile()) {
-        if (dir._log) {
-          console.log(
-            'edit',
-            path.relative(process.cwd(), path.resolve(dir._absolutePath, name))
-          );
-        }
+        if (dir._log) console.log('edit', dir._logPrelude + name);
 
         dir._mtimes = dir._mtimes.set(name, stat.mtime.getTime());
         dir._files = dir._files.set(name, await sander.readFile(root, name));

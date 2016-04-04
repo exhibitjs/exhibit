@@ -20,7 +20,7 @@ export default function normalize(_files) {
     // return fast if it's already been branded as normalized
     if (files.__exhibitNormalized === true) return files;
 
-    // make `files` into a mutable plain object, if not already
+    // make `files` into a mutable plain object
     files = files.toObject();
   }
   else if (!isPlainObject(files)) {
@@ -47,7 +47,7 @@ export default function normalize(_files) {
     }
   }
 
-  // return it as an immutable map, branded as being normalized
+  // return it as an immutable map, branded as normalized
   const result = Immutable.Map(files);
   Object.defineProperty(result, '__exhibitNormalized', { value: true });
   return result;
