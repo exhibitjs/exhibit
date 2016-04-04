@@ -52,7 +52,7 @@
     "sinon": "^1.17.3"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=0.12"
   },
   "files": [
     "dist/lib"
