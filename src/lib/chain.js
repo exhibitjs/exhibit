@@ -2,7 +2,7 @@ import normalize from './normalize';
 import { isFunction } from 'lodash';
 
 /**
- * Like a generic promise waterfall, but specifically for passing a file map
+ * Like a generic promise waterfall, but specifically for passing a filemap
  * through a series of builder functions.
  *
  * Also normalizes the file map on the way in and out of every builder.

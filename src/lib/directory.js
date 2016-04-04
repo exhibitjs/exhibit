@@ -324,7 +324,7 @@ queueableMethods = { // eslint-disable-line prefer-const
 
       watcher.on('ready', async () => {
         await reprime(dir);
-        notify();
+        await Promise.resolve(notify());
         resolve();
       });
     });
