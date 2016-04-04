@@ -39,6 +39,7 @@ async function pruneEmptyAncestors(file, until) {
  * Mutates the passed dir object by [re]priming its caches to match the real
  * files on disk.
  */
+
 async function reprime(dir) {
   // start the new files and mtimes caches (eventually to replace the ones on the object)
   const files = {};
@@ -61,40 +62,40 @@ async function reprime(dir) {
       // skip this file if it's excluded by the matcher
       if (!dir._match(relativeName)) return;
 
-      // get the cached contents (if any)
-      const cachedContents = dir._files.get(relativeName);
+      // get the cached content (if any)
+      const cachedContent = dir._files.get(relativeName);
 
       // decide what we're going to go with (the one from the cache or the one on disk)
-      let contents;
+      let content;
       let mtime;
       // console.log('\nfile', name);
       // console.log('  lastKnownMtime', lastKnownMtime);
       // console.log('       diskMtime', diskMtime);
       // console.log();
 
-      if (cachedContents && diskMtime <= lastKnownMtime) {
+      if (cachedContent && diskMtime <= lastKnownMtime) {
         // cached file exists and is new enough; use it
         // console.log('cache hit!!', relativeName);
         mtime = lastKnownMtime;
-        contents = cachedContents;
+        content = cachedContent;
       }
       else {
         // no cached file (or too old); read the file from disk
         // console.log('cache miss:', relativeName);
         mtime = diskMtime;
-        contents = await sander.readFile(name);
+        content = await sander.readFile(name);
       }
 
       // verify adding this file doesn't take us over the filesize limit
-      totalSize += contents.length;
+      totalSize += content.length;
       if (totalSize > dir._limit) {
         throw new Error(
           `Contents of directory exceed ${prettyBytes(dir._limit)} limit: ${dir._absolutePath}`
           );
       }
 
-      // update the new caches with this file's contents and mtime
-      files[relativeName] = contents;
+      // update the new caches with this file's content and mtime
+      files[relativeName] = content;
       mtimes[relativeName] = mtime;
     }
 
@@ -137,6 +138,7 @@ let queueableMethods;
  * A Directory instance represents a real directory on disk and acts as an
  * in-memory cache of its entire contents.
  */
+
 export class Directory {
   constructor(name, _options) {
     const dir = this;
@@ -159,7 +161,7 @@ export class Directory {
     dir._primed = false; // whether there's anything in the cache
 
     // intialise caches
-    dir._files = Immutable.Map(); // [fileName: contents]
+    dir._files = Immutable.Map(); // [fileName: content]
     dir._mtimes = Immutable.Map(); // [fileName: mtime]
 
     // add all the faux-decorated 'queueable' methods
@@ -239,9 +241,9 @@ queueableMethods = { // eslint-disable-line prefer-const
 
     // go through all patch paths in parallel
     await Promise.map(patchKeys, async name => {
-      const contents = patch.get(name);
+      const content = patch.get(name);
 
-      if (contents === null) {
+      if (content === null) {
         // the patch says we should delete this file.
         deletions.add(name);
         delete newFiles[name];
@@ -252,12 +254,12 @@ queueableMethods = { // eslint-disable-line prefer-const
       else {
         // the patch says this file has changed.
         // write the file to disk
-        await sander.writeFile(dir._absolutePath, name, contents);
+        await sander.writeFile(dir._absolutePath, name, content);
         if (dir._log) console.log(` →  write ${dir._logPrelude}${name}`);
 
         // then set our new caches
         newMtimes[name] = Date.now(); // nb. must record time after writing, not before
-        newFiles[name] = contents;
+        newFiles[name] = content;
       }
     });
 
@@ -282,6 +284,7 @@ queueableMethods = { // eslint-disable-line prefer-const
   /**
    * Starts watching the directory and calls your subscriber whenever things change.
    */
+
   async watch(subscriber, options) {
     const dir = this;
     if (dir._watcher) throw new Error('Already watching');
@@ -333,6 +336,7 @@ queueableMethods = { // eslint-disable-line prefer-const
   /**
    * Starts a simple dev server.
    */
+
   async serve() {
     const dir = this;
 
@@ -355,6 +359,7 @@ queueableMethods = { // eslint-disable-line prefer-const
  * Main public interface: a convenience function for making a new instance
  * (with some path-joining sugar).
  */
+
 export default function directory(...args) {
   const options = typeof args[args.length - 1] === 'string' ? undefined : args.pop();
 
