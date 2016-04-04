@@ -1,21 +1,33 @@
 import micromatch from 'micromatch';
-import { isFunction, isRegExp } from 'lodash';
+import _ from 'lodash';
 
 const alwaysTrue = () => true;
-const alwaysFalse = () => false;
 
 /**
  * Given a pattern of any kind, returns a function that can be used repeatedly
  * to check file paths against that pattern.
  */
+
 export default function matcher(pattern) {
-  if (pattern === '**' || pattern === true) return alwaysTrue;
+  switch (pattern) {
+    case '**':
+    case '**/*':
+    case true:
+    case undefined:
+    case null:
+      return alwaysTrue;
 
-  if (isFunction(pattern)) return name => Boolean(pattern(name));
+    case false:
+      throw new Error('exhibit matcher: pattern cannot be false');
 
-  if (isRegExp(pattern)) return name => pattern.test(name);
+    case '':
+      throw new Error('exhibit matcher: pattern cannot be an empty string');
 
-  if (!pattern) return alwaysFalse;
+    default:
+      if (_.isString(pattern) || _.isArray(pattern)) return micromatch.filter(pattern);
+      if (_.isFunction(pattern)) return name => Boolean(pattern(name));
+      if (_.isRegExp(pattern)) return name => pattern.test(name);
 
-  return micromatch.filter(pattern);
+      throw new TypeError(`exhibit matcher: Unexpected pattern type: ${typeof pattern}`);
+  }
 }
