@@ -14,8 +14,9 @@ import sane from 'sane';
 import serveIndex from 'serve-index';
 import serveStatic from 'serve-static';
 import subdir from 'subdir';
-import { debounce } from 'lodash';
+import _ from 'lodash';
 import { getPorts } from 'portscanner-plus';
+import { grey } from 'chalk';
 
 /**
  * Recursively soft-removes empty directories. If a directory isn't empty, it
@@ -39,7 +40,8 @@ async function pruneEmptyAncestors(file, until) {
 }
 
 /**
- * Mutates the passed directory object by [re]priming its caches to match the real files on disk.
+ * Mutates the passed dir object by [re]priming its caches to match the real
+ * files on disk.
  */
 async function reprime(dir) {
   // start the new files and mtimes caches (eventually to replace the ones on the object)
@@ -130,6 +132,7 @@ async function reprime(dir) {
 const defaults = {
   match: '**',
   limit: '10MB',
+  log: false,
 };
 
 let queueableMethods;
@@ -148,6 +151,8 @@ export class Directory {
     dir._absolutePath = path.resolve(name);
     dir._match = matcher(options.match);
     dir._limit = Number(parseFilesize(options.limit)); // https://github.com/patrickkettner/filesize-parser/pull/10
+    dir._log = Boolean(options.log);
+    dir._logPrelude = grey(path.relative(process.cwd(), dir._absolutePath)) + path.sep;
 
     if (options.force !== true && !subdir(process.cwd(), dir._absolutePath)) {
       throw new Error("exhibit: Cannot work outside CWD unless you enable the 'force' option");
@@ -182,6 +187,7 @@ export class Directory {
    * Synchronous method to retrieve the files cache as it stands, without revalidating
    * against the disk. Throws if this directory has never been primed.
    */
+
   getCache() {
     if (!this._primed) throw new Error('exhibit: Directory has never been primed.');
     return this._files;
@@ -211,6 +217,11 @@ queueableMethods = { // eslint-disable-line prefer-const
     return dir._files;
   },
 
+
+  /**
+   * Writes the given filemap to disk.
+   */
+
   async write(incomingFiles) {
     const dir = this;
 
@@ -221,6 +232,7 @@ queueableMethods = { // eslint-disable-line prefer-const
 
     // see what changes are needed
     const patch = diff(dir._files, incomingFiles);
+    const patchKeys = patch.keys();
 
     // start some mutatable objects based on our existing caches (eventually to replace them)
     const newFiles = dir._files.toObject();
@@ -230,19 +242,22 @@ queueableMethods = { // eslint-disable-line prefer-const
     const deletions = new Set();
 
     // go through all patch paths in parallel
-    await Promise.map(patch.keys(), async name => {
+    await Promise.map(patchKeys, async name => {
       const contents = patch.get(name);
 
       if (contents === null) {
         // the patch says we should delete this file.
         deletions.add(name);
         delete newFiles[name];
+
         await sander.unlink(dir._absolutePath, name);
+        if (dir._log) console.log(` → delete ${dir._logPrelude}${name}`);
       }
       else {
         // the patch says this file has changed.
         // write the file to disk
         await sander.writeFile(dir._absolutePath, name, contents);
+        if (dir._log) console.log(` →  write ${dir._logPrelude}${name}`);
 
         // then set our new caches
         newMtimes[name] = Date.now(); // nb. must record time after writing, not before
@@ -271,32 +286,46 @@ queueableMethods = { // eslint-disable-line prefer-const
   /**
    * Starts watching the directory and calls your subscriber whenever things change.
    */
-  async watch(subscriber, saneOptions) {
+  async watch(subscriber, options) {
     const dir = this;
     if (dir._watcher) throw new Error('Already watching');
 
     await reprime(dir);
 
-    const notify = debounce(() => {
+    const notify = _.debounce(() => {
       subscriber(dir._files);
-    });
+    }, 10);
 
     const onWatchEvent = async (name, root, stat) => {
       if (!dir._match(name)) return;
 
       if (!stat) {
+        if (dir._log) {
+          console.log(
+            'delete',
+            path.relative(process.cwd(), path.resolve(dir._absolutePath, name))
+          );
+        }
+
         dir._files = dir._files.delete(name);
         dir._mtimes = dir._mtimes.delete(name);
         notify();
       }
       else if (stat.isFile()) {
+        if (dir._log) {
+          console.log(
+            'edit',
+            path.relative(process.cwd(), path.resolve(dir._absolutePath, name))
+          );
+        }
+
         dir._mtimes = dir._mtimes.set(name, stat.mtime.getTime());
         dir._files = dir._files.set(name, await sander.readFile(root, name));
         notify();
       }
     };
 
-    const watcher = sane(dir._absolutePath, saneOptions);
+    const watcher = sane(dir._absolutePath, options);
 
     watcher.on('add', onWatchEvent);
     watcher.on('change', onWatchEvent);
