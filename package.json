@@ -26,7 +26,7 @@
     "immutable": "^3.7.6",
     "lazy-builder": "^0.1.1",
     "lodash": "^4.8.1",
-    "micromatch": "^2.3.7",
+    "micromatch": "^3.0.1",
     "portscanner-plus": "^0.2.1",
     "pretty-bytes": "^3.0.1",
     "resolve-from": "^2.0.0",
